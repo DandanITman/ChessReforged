@@ -3,7 +3,7 @@
 import React from "react";
 import { DndContext, type DragEndEvent, type DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useGameStore, pieceGlyph } from "@/lib/store/game";
-import type { Square, Color, PieceSymbol } from "chess.js";
+import { Chess, type Square, type Color, type PieceSymbol } from "chess.js";
 import { cn } from "@/lib/utils";
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
@@ -96,10 +96,16 @@ function DroppableSquare({
 }
 
 export default function ChessBoard() {
-  const board = useGameStore((s) => s.board());
+  const fen = useGameStore((s) => s.fen);
   const turn = useGameStore((s) => s.turn);
   const legalMoves = useGameStore((s) => s.legalMoves);
   const makeMove = useGameStore((s) => s.move);
+
+  // Derive a stable board matrix from FEN so the selector does not change identity every render
+  const board = React.useMemo(() => {
+    const c = new Chess(fen);
+    return c.board();
+  }, [fen]);
 
   // Local UI state for selection + available moves
   const [from, setFrom] = React.useState<Square | null>(null);
