@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chess Reforged (Web Prototype v0.1)
 
-## Getting Started
+A modern web-based chess variant with point-based custom setups, unlockable pieces, and classic play modes.
 
-First, run the development server:
+Blueprint and plan
+- See docs/blueprint.md for the technical blueprint, architecture, and milestones.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Features in this prototype
+- Splash replacement: Mode Select on home with tiles
+- Global TopBar with profile icon placeholder and theme toggle
+- Pages scaffolded: Play vs Bot, Play Online (stub), Editor, Shop, Achievements, Settings
+- ChessBoard component placeholder with coordinates and 8x8 grid
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Stack
+- Next.js 15 (App Router), TypeScript
+- Tailwind CSS v4
+- shadcn/ui (Radix primitives)
+- Icons: lucide-react
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Scripts
+- npm run dev  Start dev server
+- npm run build  Build production bundle
+- npm run start  Start production server
+- npm run lint  Lint with ESLint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Quick start
+1. Install dependencies
+   npm install
+2. Start development server
+   npm run dev
+3. Open http://localhost:3000
 
-## Learn More
+Project structure
+- src/app: routes (play/bot, play/online, editor, shop, achievements, settings)
+- src/components: TopBar, NavTile, ChessBoard, shadcn/ui components in src/components/ui
+- src/lib: utils (cn)
+- public: static assets
+- docs: blueprint
 
-To learn more about Next.js, take a look at the following resources:
+Roadmap (high-level)
+- M1: Core chess (chess.js) and Editor placement validation (points and first two ranks)
+- M2: Bot using stockfish.wasm in a Web Worker
+- M3: Visual polish (animations, transitions)
+- M4: Backend scaffolding, auth, profiles
+- M5: Multiplayer lobby and matchmaking
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Notes
+- Theme: Light/dark toggle sets data-theme on html root; Tailwind v4 CSS variables map the theme colors.
+- Component kit: Added Button, Card, Navigation Menu, Avatar, Dropdown Menu via shadcn CLI.
