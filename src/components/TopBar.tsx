@@ -53,39 +53,29 @@ export default function TopBar() {
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link href="/play/bot" legacyBehavior passHref>
-                  <NavigationMenuLink className="px-3 py-2 text-sm hover:underline">
-                    Play Bot
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink asChild className="px-3 py-2 text-sm hover:underline">
+                  <Link href="/play/bot">Play Bot</Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/play/online" legacyBehavior passHref>
-                  <NavigationMenuLink className="px-3 py-2 text-sm hover:underline">
-                    Play Online
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink asChild className="px-3 py-2 text-sm hover:underline">
+                  <Link href="/play/online">Play Online</Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/editor" legacyBehavior passHref>
-                  <NavigationMenuLink className="px-3 py-2 text-sm hover:underline">
-                    Editor
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink asChild className="px-3 py-2 text-sm hover:underline">
+                  <Link href="/editor">Editor</Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/shop" legacyBehavior passHref>
-                  <NavigationMenuLink className="px-3 py-2 text-sm hover:underline">
-                    Shop
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink asChild className="px-3 py-2 text-sm hover:underline">
+                  <Link href="/shop">Shop</Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/achievements" legacyBehavior passHref>
-                  <NavigationMenuLink className="px-3 py-2 text-sm hover:underline">
-                    Achievements
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink asChild className="px-3 py-2 text-sm hover:underline">
+                  <Link href="/achievements">Achievements</Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
