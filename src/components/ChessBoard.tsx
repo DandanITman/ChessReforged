@@ -48,7 +48,7 @@ function DraggablePiece({
         onSelect(square);
       }}
       className={cn(
-        "absolute inset-0 flex items-center justify-center text-2xl select-none",
+        "absolute inset-0 flex items-center justify-center text-3xl select-none",
         "transition-transform",
         selected ? "ring-2 ring-blue-500/70 ring-offset-2 ring-offset-transparent" : "",
         isDragging ? "cursor-grabbing" : "cursor-grab",
@@ -56,7 +56,7 @@ function DraggablePiece({
       style={style}
       aria-label={`${color === "w" ? "White" : "Black"} ${type} on ${square}`}
     >
-      <span className={color === "w" ? "text-black" : "text-black/80 dark:text-white"}>
+      <span className={color === "w" ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,.7)]" : "text-zinc-900 dark:text-zinc-100 drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"}>
         {pieceGlyph(color, type)}
       </span>
     </button>
@@ -83,8 +83,10 @@ function DroppableSquare({
       ref={setNodeRef}
       onClick={onClick}
       className={cn(
-        "relative size-12",
-        isDark ? "bg-zinc-700/40" : "bg-zinc-200/60",
+        "relative size-14",
+        isDark
+          ? "bg-emerald-700/60 dark:bg-emerald-800/60"
+          : "bg-emerald-200/70 dark:bg-emerald-300/30",
         highlight === "move" && "outline outline-2 outline-blue-400/70 outline-offset-0",
         highlight === "from" && "outline outline-2 outline-emerald-400/70 outline-offset-0",
         isOver && "ring-2 ring-blue-500/50",
@@ -172,13 +174,13 @@ export default function ChessBoard() {
   return (
     <div className="inline-block">
       <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-[20px_repeat(8,48px)] grid-rows-[repeat(8,48px)_20px] border rounded-md overflow-hidden">
+        <div className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-lg shadow-lg overflow-hidden">
           {Array.from({ length: 8 }).map((_, rankIndex) => {
             const rank = 8 - rankIndex;
             return (
               <React.Fragment key={rank}>
                 {/* Rank label */}
-                <div className="flex items-center justify-center text-xs text-muted-foreground select-none">
+                <div className="flex items-center justify-center text-[11px] font-medium text-muted-foreground/80 select-none">
                   {rank}
                 </div>
                 {files.map((_, fileIndex) => {
@@ -215,7 +217,7 @@ export default function ChessBoard() {
           {files.map((f) => (
             <div
               key={f}
-              className="flex items-center justify-center text-xs text-muted-foreground select-none"
+              className="flex items-center justify-center text-[11px] font-medium text-muted-foreground/80 select-none"
             >
               {f}
             </div>

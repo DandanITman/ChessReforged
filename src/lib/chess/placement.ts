@@ -10,7 +10,7 @@ export const PIECE_COSTS: Record<PieceSymbol, number> = {
   n: 3,
   b: 3,
   r: 5,
-  q: 9,
+  q: 8,
   k: 0, // king is mandatory but costs 0
 };
 

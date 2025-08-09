@@ -42,7 +42,7 @@ export default function EditorBoard() {
   return (
     <div className="inline-block select-none">
       <div
-        className="grid grid-cols-[20px_repeat(8,48px)] grid-rows-[repeat(8,48px)_20px] border rounded-md overflow-hidden"
+        className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-md overflow-hidden"
         onContextMenu={(e) => e.preventDefault()}
       >
         {Array.from({ length: 8 }).map((_, rankIndex) => {
@@ -70,15 +70,17 @@ export default function EditorBoard() {
                       }
                     }}
                     className={cn(
-                      "relative size-12",
-                      isDark ? "bg-zinc-700/40" : "bg-zinc-200/60",
+                      "relative size-14",
+                      isDark
+                        ? "bg-emerald-700/60 dark:bg-emerald-800/60"
+                        : "bg-emerald-200/70 dark:bg-emerald-300/30",
                       allowed ? "ring-inset ring-0" : "opacity-60"
                     )}
                     aria-label={`${sq} ${allowed ? "allowed" : "not-allowed"}`}
                   >
                     {p ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                        <span className={p.color === "w" ? "text-black" : "text-black/80 dark:text-white"}>
+                      <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                        <span className={p.color === "w" ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,.7)]" : "text-zinc-900 dark:text-zinc-100 drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"}>
                           {pieceGlyph(p.color, p.type)}
                         </span>
                       </div>
