@@ -4,7 +4,7 @@ import React from "react";
 import type { Square } from "chess.js";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/lib/store/editor";
-import { pieceGlyph } from "@/lib/store/game";
+import { pieceSprite } from "@/lib/chess/pieceSprites";
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 
@@ -42,7 +42,7 @@ export default function EditorBoard() {
   return (
     <div className="inline-block select-none">
       <div
-        className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-md overflow-hidden"
+        className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-lg shadow-lg overflow-hidden"
         onContextMenu={(e) => e.preventDefault()}
       >
         {Array.from({ length: 8 }).map((_, rankIndex) => {
@@ -50,7 +50,7 @@ export default function EditorBoard() {
           return (
             <React.Fragment key={rank}>
               {/* Rank label */}
-              <div className="flex items-center justify-center text-xs text-muted-foreground">
+              <div className="flex items-center justify-center text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
                 {rank}
               </div>
               {files.map((_, fileIndex) => {
@@ -71,18 +71,18 @@ export default function EditorBoard() {
                     }}
                     className={cn(
                       "relative size-14",
-                      isDark
-                        ? "bg-emerald-700/60 dark:bg-emerald-800/60"
-                        : "bg-emerald-200/70 dark:bg-emerald-300/30",
+                      isDark ? "bg-[#769656]" : "bg-[#EEEED2]",
                       allowed ? "ring-inset ring-0" : "opacity-60"
                     )}
                     aria-label={`${sq} ${allowed ? "allowed" : "not-allowed"}`}
                   >
                     {p ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-3xl">
-                        <span className={p.color === "w" ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,.7)]" : "text-zinc-900 dark:text-zinc-100 drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"}>
-                          {pieceGlyph(p.color, p.type)}
-                        </span>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <img
+                          src={pieceSprite(p.color, p.type)}
+                          alt={`${p.color === "w" ? "White" : "Black"} ${p.type}`}
+                          className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)]"
+                        />
                       </div>
                     ) : null}
                   </div>
@@ -94,7 +94,7 @@ export default function EditorBoard() {
         {/* File labels row */}
         <div />
         {files.map((f) => (
-          <div key={f} className="flex items-center justify-center text-xs text-muted-foreground">
+          <div key={f} className="flex items-center justify-center text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
             {f}
           </div>
         ))}

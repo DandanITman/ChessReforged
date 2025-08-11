@@ -2,7 +2,8 @@
 
 import React from "react";
 import { DndContext, type DragEndEvent, type DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
-import { useGameStore, pieceGlyph } from "@/lib/store/game";
+import { useGameStore } from "@/lib/store/game";
+import { pieceSprite } from "@/lib/chess/pieceSprites";
 import { Chess, type Square, type Color, type PieceSymbol } from "chess.js";
 import { cn } from "@/lib/utils";
 
@@ -56,9 +57,11 @@ function DraggablePiece({
       style={style}
       aria-label={`${color === "w" ? "White" : "Black"} ${type} on ${square}`}
     >
-      <span className={color === "w" ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,.7)]" : "text-zinc-900 dark:text-zinc-100 drop-shadow-[0_1px_1px_rgba(0,0,0,.25)]"}>
-        {pieceGlyph(color, type)}
-      </span>
+      <img
+        src={pieceSprite(color, type)}
+        alt={`${color === "w" ? "White" : "Black"} ${type}`}
+        className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)]"
+      />
     </button>
   );
 }
@@ -84,12 +87,10 @@ function DroppableSquare({
       onClick={onClick}
       className={cn(
         "relative size-14",
-        isDark
-          ? "bg-emerald-700/60 dark:bg-emerald-800/60"
-          : "bg-emerald-200/70 dark:bg-emerald-300/30",
-        highlight === "move" && "outline outline-2 outline-blue-400/70 outline-offset-0",
-        highlight === "from" && "outline outline-2 outline-emerald-400/70 outline-offset-0",
-        isOver && "ring-2 ring-blue-500/50",
+        isDark ? "bg-[#769656]" : "bg-[#EEEED2]",
+        highlight === "move" && "outline outline-2 outline-sky-400/80 outline-offset-0",
+        highlight === "from" && "outline outline-2 outline-emerald-400/80 outline-offset-0",
+        isOver && "ring-2 ring-sky-500/60",
       )}
     >
       {children}

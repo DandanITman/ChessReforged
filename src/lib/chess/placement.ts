@@ -14,7 +14,9 @@ export const PIECE_COSTS: Record<PieceSymbol, number> = {
   k: 0, // king is mandatory but costs 0
 };
 
-// Standard army value excluding king: 1*8 + 3*2 + 3*2 + 5*2 + 9 = 39
+// Budget note:
+// - Default budget is 39.
+// - With current costs (P=1, N/B=3, R=5, Q=8, K=0 max one), a classic army totals 38, leaving 1 spare point.
 export const DEFAULT_BUDGET = 39;
 
 export function squareFile(sq: Square): string {
