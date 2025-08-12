@@ -1,7 +1,7 @@
 "use client";
 
 import EditorBoard from "@/components/EditorBoard";
-import DeckManager from "@/components/DeckManager";
+import CompactDeckSelector from "@/components/CompactDeckSelector";
 import { useEditorStore } from "@/lib/store/editor";
 import { useProfileStore } from "@/lib/store/profile";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ export default function EditorPage() {
   const currentDeck = useEditorStore((s) => s.currentDeck);
   const setColor = useEditorStore((s) => s.setColor);
   const setSelectedType = useEditorStore((s) => s.setSelectedType);
-  const clear = useEditorStore((s) => s.clear);
 
   const inventory = useProfileStore((s) => s.inventory);
   const playerLevel = useProfileStore((s) => s.level);
@@ -59,9 +58,11 @@ export default function EditorPage() {
         </div>
       </div>
 
+      {/* Compact Deck Management */}
+      <CompactDeckSelector playerLevel={playerLevel} />
+
       <p className="text-sm text-muted-foreground">
         Build custom armies within your point budget. Click squares to place pieces, right-click to remove.
-        {currentDeck ? `Currently editing: ${currentDeck.name}` : 'No deck selected.'}
       </p>
 
       <div className="flex gap-6">
@@ -88,24 +89,9 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Deck Management and Controls */}
+        {/* Piece Selection */}
         <div className="flex-1 min-w-0">
           <div className="space-y-4">
-            {/* Deck Manager */}
-            <DeckManager playerLevel={playerLevel} />
-
-            {/* Quick Actions */}
-            <div className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Points remaining:</span>
-                <span className={`font-semibold ${validation.remaining >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                  {validation.remaining}
-                </span>
-              </div>
-              <Button variant="outline" onClick={() => clear()}>
-                Clear Army
-              </Button>
-            </div>
 
             {/* Filters and Sorting */}
             <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
