@@ -181,7 +181,7 @@ export default function ChessBoard() {
             return (
               <React.Fragment key={rank}>
                 {/* Rank label */}
-                <div className="flex items-center justify-center text-[11px] font-medium text-muted-foreground/80 select-none">
+                <div className="flex items-center justify-center text-[11px] font-medium text-black select-none">
                   {rank}
                 </div>
                 {files.map((_, fileIndex) => {
@@ -218,7 +218,7 @@ export default function ChessBoard() {
           {files.map((f) => (
             <div
               key={f}
-              className="flex items-center justify-center text-[11px] font-medium text-muted-foreground/80 select-none"
+              className="flex items-center justify-center text-[11px] font-medium text-black select-none"
             >
               {f}
             </div>
