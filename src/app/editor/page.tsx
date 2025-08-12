@@ -1,10 +1,10 @@
 "use client";
 
 import EditorBoard from "@/components/EditorBoard";
+import DeckManager from "@/components/DeckManager";
 import { useEditorStore } from "@/lib/store/editor";
 import { useProfileStore } from "@/lib/store/profile";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pieceSprite } from "@/lib/chess/pieceSprites";
 import { PIECE_COSTS } from "@/lib/chess/placement";
@@ -23,15 +23,15 @@ const PIECES: { key: string; type: "p" | "n" | "b" | "r" | "q" | "k"; label: str
 
 export default function EditorPage() {
   const color = useEditorStore((s) => s.color);
-  const budget = useEditorStore((s) => s.budget);
   const selectedType = useEditorStore((s) => s.selectedType);
   const validation = useEditorStore((s) => s.validation);
+  const currentDeck = useEditorStore((s) => s.currentDeck);
   const setColor = useEditorStore((s) => s.setColor);
-  const setBudget = useEditorStore((s) => s.setBudget);
   const setSelectedType = useEditorStore((s) => s.setSelectedType);
   const clear = useEditorStore((s) => s.clear);
 
   const inventory = useProfileStore((s) => s.inventory);
+  const playerLevel = useProfileStore((s) => s.level);
 
   const [filterType, setFilterType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
@@ -60,7 +60,8 @@ export default function EditorPage() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Click a square in your first three ranks to place the selected piece. Shift/Ctrl/Meta click or right-click to remove a piece.
+        Build custom armies within your point budget. Click squares to place pieces, right-click to remove.
+        {currentDeck ? `Currently editing: ${currentDeck.name}` : 'No deck selected.'}
       </p>
 
       <div className="flex gap-6">
@@ -87,33 +88,19 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Piece Drawer Section */}
+        {/* Deck Management and Controls */}
         <div className="flex-1 min-w-0">
           <div className="space-y-4">
-            {/* Budget and Controls */}
+            {/* Deck Manager */}
+            <DeckManager playerLevel={playerLevel} />
+
+            {/* Quick Actions */}
             <div className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="budget" className="text-muted-foreground font-medium">
-                    Budget:
-                  </label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    className="h-8 w-16 text-center"
-                    value={budget}
-                    onChange={(e) => {
-                      const v = Number(e.target.value || 0);
-                      setBudget(Number.isFinite(v) ? Math.max(0, v) : budget);
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Remaining:</span>
-                  <span className={`font-semibold ${validation.remaining >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    {validation.remaining}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Points remaining:</span>
+                <span className={`font-semibold ${validation.remaining >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  {validation.remaining}
+                </span>
               </div>
               <Button variant="outline" onClick={() => clear()}>
                 Clear Army

@@ -73,7 +73,7 @@ function calculateLevel(exp: number): number {
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
   credits: 500,
-  exp: 0,
+  exp: 300, // Start at level 4 to demonstrate budget progression
   orbs: 0,
   inventory: { ...initialInventory },
   achievements: [...initialAchievements],
