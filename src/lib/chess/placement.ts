@@ -15,9 +15,9 @@ export const PIECE_COSTS: Record<PieceSymbol, number> = {
 };
 
 // Budget note:
-// - Default budget is 39.
-// - With current costs (P=1, N/B=3, R=5, Q=8, K=0 max one), a classic army totals 38, leaving 1 spare point.
-export const DEFAULT_BUDGET = 39;
+// - Default budget is 38.
+// - With current costs (P=1, N/B=3, R=5, Q=8, K=0 max one), a classic army totals 38.
+export const DEFAULT_BUDGET = 38;
 
 export function squareFile(sq: Square): string {
   return sq[0];
@@ -28,9 +28,9 @@ export function squareRank(sq: Square): number {
   return parseInt(sq[1] as string, 10);
 }
 
-export function isInFirstTwoRanks(color: Color, sq: Square): boolean {
+export function isInFirstThreeRanks(color: Color, sq: Square): boolean {
   const r = squareRank(sq);
-  return color === "w" ? r === 1 || r === 2 : r === 7 || r === 8;
+  return color === "w" ? r === 1 || r === 2 || r === 3 : r === 6 || r === 7 || r === 8;
 }
 
 export function isValidSquareFile(sq: Square): boolean {
@@ -80,12 +80,12 @@ export function validatePlacement(args: {
   const budget = args.budget ?? DEFAULT_BUDGET;
   const errors: string[] = [];
 
-  // Region constraint: only first two ranks for the specified color
+  // Region constraint: only first three ranks for the specified color
   for (const [sq, p] of Object.entries(placed)) {
     if (!p) continue;
     if (p.color !== color) continue;
-    if (!isInFirstTwoRanks(color, sq as Square)) {
-      errors.push(`Piece ${p.type} at ${sq} is outside the first two ranks for ${color}.`);
+    if (!isInFirstThreeRanks(color, sq as Square)) {
+      errors.push(`Piece ${p.type} at ${sq} is outside the first three ranks for ${color}.`);
     }
   }
 
@@ -119,8 +119,8 @@ export function canPlacePiece(args: {
   const { placed, color, sq, type } = args;
   const budget = args.budget ?? DEFAULT_BUDGET;
 
-  if (!isInFirstTwoRanks(color, sq)) {
-    return { ok: false, reason: "Must place within your first two ranks." };
+  if (!isInFirstThreeRanks(color, sq)) {
+    return { ok: false, reason: "Must place within your first three ranks." };
   }
 
   // Temporary apply placement for validation

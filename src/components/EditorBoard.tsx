@@ -20,10 +20,10 @@ export default function EditorBoard() {
   const placeAt = useEditorStore((s) => s.placeAt);
   const removeAt = useEditorStore((s) => s.removeAt);
 
-  // Only first two ranks per color are allowed
+  // Only first three ranks per color are allowed
   function isAllowed(sq: Square): boolean {
     const r = Number(sq[1] as string);
-    return color === "w" ? r === 1 || r === 2 : r === 7 || r === 8;
+    return color === "w" ? r === 1 || r === 2 || r === 3 : r === 6 || r === 7 || r === 8;
   }
 
   function onSquareClick(sq: Square, e: React.MouseEvent<HTMLDivElement>) {
