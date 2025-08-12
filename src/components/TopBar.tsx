@@ -24,14 +24,19 @@ function ThemeToggle() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const saved = (root.getAttribute('data-theme') as 'light' | 'dark') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    setTheme(saved);
-    root.setAttribute('data-theme', saved);
+    // Check localStorage first, then system preference
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const initialTheme = saved || systemPreference;
+
+    setTheme(initialTheme);
+    root.setAttribute('data-theme', initialTheme);
   }, []);
 
   function toggle() {
     const next = theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
     setTheme(next);
   }
 
