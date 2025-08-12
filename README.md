@@ -9,7 +9,10 @@ Features in this prototype
 - Splash replacement: Mode Select on home with tiles
 - Global TopBar with profile icon placeholder and theme toggle
 - Pages scaffolded: Play vs Bot, Play Online (stub), Editor, Shop, Achievements, Settings
-- ChessBoard component placeholder with coordinates and 8x8 grid
+- **ChessBoard component with high-quality chess piece PNG icons (256x256) and full functionality**
+- **AI Bot opponent with strategic move evaluation**
+- **Human vs Human and Human vs Bot game modes**
+- **Drag-and-drop piece movement with legal move validation**
 
 Stack
 - Next.js 15 (App Router), TypeScript

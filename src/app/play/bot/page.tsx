@@ -1,13 +1,13 @@
-import ChessBoard from "@/components/ChessBoard";
+import BotChessBoard from "@/components/BotChessBoard";
 
 export default function PlayBotPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-xl font-semibold">Play vs Bot</h1>
       <p className="text-sm text-muted-foreground">
-        Bot logic coming in a later milestone. For now, interact with the board locally.
+        Choose your side and play against the AI bot! The bot uses a simple evaluation function to make strategic moves.
       </p>
-      <ChessBoard />
+      <BotChessBoard />
     </section>
   );
 }
