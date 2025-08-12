@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type { PieceSymbol } from "chess.js";
+import type { PieceSymbol, Color } from "chess.js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useProfileStore, type PackReward } from "@/lib/store/profile";
-import { Coins, ShoppingBag, Package, Crown, Sparkles, Zap, Gem, Palette, X } from "lucide-react";
+import { getPieceInfo, getPieceRarityColor, getPieceRarityGradient } from "@/lib/chess/pieceInfo";
+import { pieceSprite } from "@/lib/chess/pieceSprites";
+import { Coins, ShoppingBag, Package, Crown, Sparkles, Zap, Gem, Palette, X, Star, Info } from "lucide-react";
 
 const PIECE_LABEL: Record<PieceSymbol, string> = {
   p: "Pawn",
@@ -136,22 +138,72 @@ export default function ShopPage() {
 
       {/* Pack Rewards */}
       {lastReceived && (
-        <Card className="p-6 border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-          <div className="flex items-center gap-2 mb-4">
-            <Package className="h-5 w-5 text-emerald-600" />
-            <div className="font-semibold text-emerald-800 dark:text-emerald-300">Pack Opened!</div>
+        <Card className="p-6 border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 animate-in fade-in-0 slide-in-from-top-4 duration-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-emerald-600" />
+              <div className="font-semibold text-emerald-800 dark:text-emerald-300">Pack Opened!</div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLastReceived(null)}
+              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Pieces Received */}
           <div className="mb-4">
-            <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2">Pieces Received:</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {lastReceived.pieces.map((item, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg border border-emerald-200 bg-white/50 px-3 py-2">
-                  <span className="font-medium">{PIECE_LABEL[item.type]}</span>
-                  <span className="text-emerald-600 font-semibold">+{item.count}</span>
-                </div>
-              ))}
+            <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-3">Pieces Received:</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {lastReceived.pieces.map((item, i) => {
+                const pieceInfo = getPieceInfo(item.type);
+                const rarityColor = getPieceRarityColor(pieceInfo.rarity);
+                const rarityGradient = getPieceRarityGradient(pieceInfo.rarity);
+
+                return (
+                  <div key={i} className="relative overflow-hidden rounded-lg border bg-card p-4 hover:shadow-md transition-shadow">
+                    {/* Rarity gradient background */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${rarityGradient} opacity-5`} />
+
+                    <div className="relative flex items-start gap-3">
+                      {/* Piece Image */}
+                      <div className="flex-shrink-0">
+                        <img
+                          src={pieceSprite("w" as Color, item.type)}
+                          alt={pieceInfo.name}
+                          className="w-12 h-12 drop-shadow-sm"
+                        />
+                      </div>
+
+                      {/* Piece Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h5 className="font-semibold text-sm">{item.count}x {pieceInfo.name}</h5>
+                          <span className={`text-xs font-medium ${rarityColor}`}>
+                            {pieceInfo.rarity}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          <span className="text-xs font-medium">{pieceInfo.points} points</span>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {pieceInfo.movement}
+                        </p>
+
+                        <p className="text-xs italic text-muted-foreground">
+                          "{pieceInfo.description}"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

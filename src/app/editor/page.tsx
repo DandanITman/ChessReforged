@@ -2,11 +2,14 @@
 
 import EditorBoard from "@/components/EditorBoard";
 import { useEditorStore } from "@/lib/store/editor";
+import { useProfileStore } from "@/lib/store/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pieceSprite } from "@/lib/chess/pieceSprites";
 import { PIECE_COSTS } from "@/lib/chess/placement";
+import { getPieceInfo } from "@/lib/chess/pieceInfo";
+import PieceTooltip from "@/components/PieceTooltip";
 import { useState } from "react";
 
 const PIECES: { key: string; type: "p" | "n" | "b" | "r" | "q" | "k"; label: string; category: string }[] = [
@@ -27,6 +30,8 @@ export default function EditorPage() {
   const setBudget = useEditorStore((s) => s.setBudget);
   const setSelectedType = useEditorStore((s) => s.setSelectedType);
   const clear = useEditorStore((s) => s.clear);
+
+  const inventory = useProfileStore((s) => s.inventory);
 
   const [filterType, setFilterType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
@@ -148,29 +153,35 @@ export default function EditorPage() {
               <h3 className="text-lg font-semibold">Piece Arsenal</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {filteredPieces.map((piece) => (
-                  <button
+                  <PieceTooltip
                     key={piece.key}
-                    onClick={() => setSelectedType(piece.type)}
-                    className={`p-3 rounded-lg border transition-all hover:shadow-md ${
-                      selectedType === piece.type
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                        : "border-border bg-card hover:border-primary/50"
-                    }`}
+                    pieceType={piece.type}
+                    color={color}
+                    inventoryCount={inventory[piece.type]}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <img
-                        src={pieceSprite(color, piece.type)}
-                        alt={piece.label}
-                        className="w-12 h-12 drop-shadow-sm"
-                      />
-                      <div className="text-center">
-                        <div className="font-medium text-sm">{piece.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {PIECE_COSTS[piece.type]} {PIECE_COSTS[piece.type] === 1 ? 'point' : 'points'}
+                    <button
+                      onClick={() => setSelectedType(piece.type)}
+                      className={`w-full p-3 rounded-lg border transition-all hover:shadow-md ${
+                        selectedType === piece.type
+                          ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                          : "border-border bg-card hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <img
+                          src={pieceSprite(color, piece.type)}
+                          alt={piece.label}
+                          className="w-12 h-12 drop-shadow-sm"
+                        />
+                        <div className="text-center">
+                          <div className="font-medium text-sm">{piece.label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {PIECE_COSTS[piece.type]} {PIECE_COSTS[piece.type] === 1 ? 'point' : 'points'}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </PieceTooltip>
                 ))}
               </div>
             </div>
