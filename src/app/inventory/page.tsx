@@ -49,7 +49,7 @@ export default function InventoryPage() {
   const unequipCosmetic = useProfileStore((s) => s.unequipCosmetic);
 
   // UI state
-  const [tab, setTab] = useState<"inventory" | "cosmetics">("inventory");
+  const [tab, setTab] = useState<"inventory" | "cosmetics" | "boards">("inventory");
   const [selectedPiece, setSelectedPiece] = useState<ExtendedPieceSymbol>("p");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +144,13 @@ export default function InventoryPage() {
           className="px-4"
         >
           Cosmetics
+        </Button>
+        <Button
+          variant={tab === "boards" ? "default" : "outline"}
+          onClick={() => setTab("boards")}
+          className="px-4"
+        >
+          Board Themes
         </Button>
       </div>
 
@@ -329,6 +336,122 @@ export default function InventoryPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Board Themes tab */}
+      {tab === "boards" && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Board Themes</h2>
+              <p className="text-sm text-muted-foreground">Customize your chess board appearance.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                id: "classic",
+                name: "Classic Wood",
+                description: "Traditional wooden chess board",
+                preview: "bg-gradient-to-br from-amber-100 to-amber-200",
+                owned: true,
+                equipped: true
+              },
+              {
+                id: "marble",
+                name: "Marble Elegance",
+                description: "Luxurious marble finish",
+                preview: "bg-gradient-to-br from-gray-100 to-gray-300",
+                owned: true,
+                equipped: false
+              },
+              {
+                id: "metal",
+                name: "Steel & Chrome",
+                description: "Modern metallic appearance",
+                preview: "bg-gradient-to-br from-slate-300 to-slate-500",
+                owned: false,
+                equipped: false
+              },
+              {
+                id: "neon",
+                name: "Neon Glow",
+                description: "Futuristic glowing board",
+                preview: "bg-gradient-to-br from-cyan-400 to-purple-500",
+                owned: false,
+                equipped: false
+              },
+              {
+                id: "glass",
+                name: "Crystal Glass",
+                description: "Transparent crystal design",
+                preview: "bg-gradient-to-br from-blue-100 to-blue-200",
+                owned: false,
+                equipped: false
+              }
+            ].map((theme) => (
+              <Card key={theme.id} className="relative overflow-hidden">
+                <div className="relative p-4">
+                  <div className={`w-full h-24 rounded-lg ${theme.preview} mb-3 border-2 border-gray-200 dark:border-gray-700`}>
+                    <div className="grid grid-cols-8 grid-rows-8 h-full">
+                      {Array.from({ length: 64 }).map((_, i) => {
+                        const row = Math.floor(i / 8);
+                        const col = i % 8;
+                        const isDark = (row + col) % 2 === 1;
+                        return (
+                          <div
+                            key={i}
+                            className={`${isDark ? 'bg-black/20' : 'bg-white/20'}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold">{theme.name}</div>
+                      {theme.equipped && (
+                        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                          <Check className="h-3 w-3" />
+                          Equipped
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{theme.description}</p>
+
+                    <div className="flex gap-2 pt-2">
+                      {theme.owned ? (
+                        theme.equipped ? (
+                          <Button size="sm" variant="outline" disabled>
+                            <Check className="h-4 w-4 mr-1" />
+                            Equipped
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="default">
+                            Equip
+                          </Button>
+                        )
+                      ) : (
+                        <Button size="sm" variant="secondary" disabled>
+                          <X className="h-4 w-4 mr-1" />
+                          Locked
+                        </Button>
+                      )}
+                    </div>
+
+                    {!theme.owned && (
+                      <div className="text-xs text-muted-foreground">
+                        Unlock via achievements or shop (coming soon)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Card>
       )}
     </section>
   );

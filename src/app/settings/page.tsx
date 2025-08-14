@@ -22,17 +22,32 @@ import {
   Sun,
   Settings as SettingsIcon,
   Save,
-  Camera
+  Camera,
+  Star,
+  Zap,
+  Coins,
+  Crown,
+  TrendingUp,
+  Award,
+  Plus,
+  Minus
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile, updatePassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
+import { LevelSystem } from "@/lib/utils/levelSystem";
+import { AdminService } from "@/lib/firebase/admin";
 
 export default function SettingsPage() {
   const { user, userProfile, refreshProfile } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
+  const [adminLoading, setAdminLoading] = React.useState(false);
+  
+  // Admin service instance
+  const adminService = AdminService.getInstance();
+  const isAdmin = user?.email && adminService.isAdmin(user.email);
 
   // State for form inputs - initialize with real user data
   const [settings, setSettings] = React.useState({
@@ -48,8 +63,7 @@ export default function SettingsPage() {
     gameInvites: true,
     friendRequests: true,
     achievements: true,
-    boardTheme: "classic",
-    pieceSet: "traditional",
+
     animationSpeed: "normal",
     showCoordinates: true,
     highlightMoves: true,
@@ -170,6 +184,100 @@ export default function SettingsPage() {
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Level Progression */}
+        {userProfile && (
+          <Card className="card-hover bg-gradient-to-r from-blue-500/10 to-purple-600/10 border-blue-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Level Progression
+              </CardTitle>
+              <CardDescription>Track your experience and level progress</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const totalExp = userProfile.stats?.totalExperience || 0;
+                const level = userProfile.profile?.level || userProfile.level || 1;
+                const levelInfo = LevelSystem.getLevelInfo(totalExp);
+                const levelTitle = LevelSystem.getLevelTitle(levelInfo.currentLevel);
+                const levelColor = LevelSystem.getLevelColor(levelInfo.currentLevel);
+                
+                return (
+                  <div className="space-y-6">
+                    {/* Level Display */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`text-4xl font-bold ${levelColor}`}>
+                          {levelInfo.currentLevel}
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold">{levelTitle}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {totalExp.toLocaleString()} total experience
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={`${levelColor} border-current`}>
+                        Level {levelInfo.currentLevel}
+                      </Badge>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Experience to next level</span>
+                        <span>
+                          {levelInfo.currentExp}/{levelInfo.expForNextLevel}
+                          <span className="text-muted-foreground ml-1">
+                            ({levelInfo.expToNextLevel} needed)
+                          </span>
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full h-3 transition-all duration-500"
+                          style={{ width: `${levelInfo.progressPercentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground text-center">
+                        {levelInfo.progressPercentage.toFixed(1)}% progress to level {levelInfo.currentLevel + 1}
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-yellow-500">
+                          {(userProfile.currency?.coins || userProfile.credits || 0).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Coins</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-500">
+                          {(userProfile.currency?.orbs || userProfile.orbs || 0).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Orbs</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-500">
+                          {userProfile.stats?.wins || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Wins</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-500">
+                          {userProfile.stats?.gamesPlayed || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Games</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile Settings */}
         <Card className="card-hover">
           <CardHeader>
@@ -432,36 +540,6 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Board Theme</label>
-                <select
-                  value={settings.boardTheme}
-                  onChange={(e) => handleInputChange('boardTheme', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                >
-                  <option value="classic">Classic Wood</option>
-                  <option value="marble">Marble</option>
-                  <option value="metal">Metal</option>
-                  <option value="neon">Neon</option>
-                  <option value="glass">Glass</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Piece Set</label>
-                <select
-                  value={settings.pieceSet}
-                  onChange={(e) => handleInputChange('pieceSet', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                >
-                  <option value="traditional">Traditional</option>
-                  <option value="modern">Modern</option>
-                  <option value="fantasy">Fantasy</option>
-                  <option value="minimalist">Minimalist</option>
-                  <option value="3d">3D Rendered</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
                 <label className="text-sm font-medium">Animation Speed</label>
                 <select
                   value={settings.animationSpeed}
@@ -543,6 +621,189 @@ export default function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Admin Controls */}
+        {isAdmin && (
+          <Card className="card-hover border-red-500/30 bg-gradient-to-r from-red-500/5 to-orange-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-500">
+                <Crown className="h-5 w-5" />
+                Admin Controls
+              </CardTitle>
+              <CardDescription>Administrative functions - use with caution</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Level & Experience Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg bg-muted/30">
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Level & Experience
+                  </h4>
+                  <div className="space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!user?.uid) return;
+                        setAdminLoading(true);
+                        try {
+                          await adminService.levelUpUser(user.uid, 1);
+                          await refreshProfile();
+                          setSuccess("Leveled up user!");
+                        } catch (error) {
+                          setError("Failed to level up user");
+                        } finally {
+                          setAdminLoading(false);
+                        }
+                      }}
+                      disabled={adminLoading}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Level Up (+1)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!user?.uid) return;
+                        setAdminLoading(true);
+                        try {
+                          await adminService.addExperience(user.uid, 1000);
+                          await refreshProfile();
+                          setSuccess("Added 1000 experience!");
+                        } catch (error) {
+                          setError("Failed to add experience");
+                        } finally {
+                          setAdminLoading(false);
+                        }
+                      }}
+                      disabled={adminLoading}
+                      className="w-full"
+                    >
+                      <Star className="h-4 w-4 mr-1" />
+                      +1000 EXP
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Coins className="h-4 w-4" />
+                    Currency
+                  </h4>
+                  <div className="space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!user?.uid) return;
+                        setAdminLoading(true);
+                        try {
+                          await adminService.addCoins(user.uid, 1000);
+                          await refreshProfile();
+                          setSuccess("Added 1000 coins!");
+                        } catch (error) {
+                          setError("Failed to add coins");
+                        } finally {
+                          setAdminLoading(false);
+                        }
+                      }}
+                      disabled={adminLoading}
+                      className="w-full text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      +1000 Coins
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!user?.uid) return;
+                        setAdminLoading(true);
+                        try {
+                          await adminService.addOrbs(user.uid, 100);
+                          await refreshProfile();
+                          setSuccess("Added 100 orbs!");
+                        } catch (error) {
+                          setError("Failed to add orbs");
+                        } finally {
+                          setAdminLoading(false);
+                        }
+                      }}
+                      disabled={adminLoading}
+                      className="w-full text-purple-600 border-purple-600 hover:bg-purple-50"
+                    >
+                      <Zap className="h-4 w-4 mr-1" />
+                      +100 Orbs
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <h4 className="font-semibold flex items-center gap-2 mb-4">
+                  <Award className="h-4 w-4" />
+                  Quick Actions
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!user?.uid) return;
+                      setAdminLoading(true);
+                      try {
+                        await adminService.unlockAllCosmetics(user.uid);
+                        await refreshProfile();
+                        setSuccess("Unlocked all cosmetics!");
+                      } catch (error) {
+                        setError("Failed to unlock cosmetics");
+                      } finally {
+                        setAdminLoading(false);
+                      }
+                    }}
+                    disabled={adminLoading}
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                  >
+                    <Award className="h-4 w-4 mr-1" />
+                    Unlock All Cosmetics
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!user?.uid || !confirm("Reset all user stats? This cannot be undone.")) return;
+                      setAdminLoading(true);
+                      try {
+                        await adminService.resetUserStats(user.uid);
+                        await refreshProfile();
+                        setSuccess("Reset user stats!");
+                      } catch (error) {
+                        setError("Failed to reset stats");
+                      } finally {
+                        setAdminLoading(false);
+                      }
+                    }}
+                    disabled={adminLoading}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <Minus className="h-4 w-4 mr-1" />
+                    Reset Stats
+                  </Button>
+                </div>
+              </div>
+              
+              {adminLoading && (
+                <div className="text-center text-sm text-muted-foreground">
+                  Processing admin action...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Save Button */}
         <div className="text-center space-y-4">
