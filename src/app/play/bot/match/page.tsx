@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import BotChessBoard from "@/components/BotChessBoard";
 import MoveHistoryPanel from "@/components/MoveHistoryPanel";
@@ -12,7 +12,7 @@ import { SFX } from "@/lib/sound/sfx";
 import { useSettingsStore } from "@/lib/store/settings";
 import type { Color } from "chess.js";
 
-export default function PlayBotMatchPage() {
+function BotMatchContent() {
   const params = useSearchParams();
   const as = params.get("as");
   const d = params.get("d");
@@ -166,6 +166,14 @@ export default function PlayBotMatchPage() {
         <MoveHistoryPanel onSelect={(entry) => { if (entry) SFX.preview(); setPreviewFen(entry?.fenAfter ?? null); }} />
       </div>
     </section>
+  );
+}
+
+export default function PlayBotMatchPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+      <BotMatchContent />
+    </Suspense>
   );
 }
 
