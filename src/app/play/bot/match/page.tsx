@@ -6,29 +6,80 @@ import BotChessBoard from "@/components/BotChessBoard";
 import MoveHistoryPanel from "@/components/MoveHistoryPanel";
 import ReadOnlyBoard from "@/components/ReadOnlyBoard";
 import { useBotGameStore } from "@/lib/store/botGame";
+import { useEditorStore } from "@/lib/store/editor";
+import { decksToFen, generateCustomPieceMapping } from "@/lib/chess/deckSystem";
 import { SFX } from "@/lib/sound/sfx";
 import { useSettingsStore } from "@/lib/store/settings";
+import type { Color } from "chess.js";
 
 export default function PlayBotMatchPage() {
   const params = useSearchParams();
   const as = params.get("as");
   const d = params.get("d");
+  const deckParam = params.get("deck");
+  const opponentDeckParam = params.get("opponentDeck");
+
   const reset = useBotGameStore((s) => s.reset);
   const setDifficulty = useBotGameStore((s) => s.setDifficulty);
   const fen = useBotGameStore((s) => s.fen);
   const status = useBotGameStore((s) => s.getGameStatus());
   const resign = useBotGameStore((s) => s.resign);
 
+  // Get decks from editor store
+  const decks = useEditorStore((s) => s.decks);
+
   const [previewFen, setPreviewFen] = useState<string | null>(null);
 
   useEffect(() => {
     if (as === "w" || as === "b") {
-      reset(as as any);
+      const playerColor = as as Color;
+
+      // Find the selected deck and opponent's main deck
+      let playerDeck = null;
+      let opponentDeck = null;
+
+      if (deckParam) {
+        playerDeck = decks.find(d => d.id === deckParam && d.color === playerColor);
+      }
+
+      // If no specific deck found, use main deck for player color
+      if (!playerDeck) {
+        playerDeck = decks.find(d => d.color === playerColor && d.isMain);
+      }
+
+      // Get opponent deck (either specified or main deck)
+      const opponentColor = playerColor === 'w' ? 'b' : 'w';
+      
+      if (opponentDeckParam) {
+        opponentDeck = decks.find(d => d.id === opponentDeckParam && d.color === opponentColor);
+      }
+      
+      // If no specific opponent deck found, use main deck for opponent color
+      if (!opponentDeck) {
+        opponentDeck = decks.find(d => d.color === opponentColor && d.isMain);
+      }
+
+      // If no main deck found for opponent, use the first available deck of that color
+      if (!opponentDeck) {
+        opponentDeck = decks.find(d => d.color === opponentColor);
+      }
+
+      // Generate FEN from decks
+      let customFen: string | undefined;
+      let customMapping;
+      if (playerDeck || opponentDeck) {
+        const whiteDeck = playerColor === 'w' ? playerDeck : opponentDeck;
+        const blackDeck = playerColor === 'w' ? opponentDeck : playerDeck;
+        customFen = decksToFen(whiteDeck || null, blackDeck || null);
+        customMapping = generateCustomPieceMapping(whiteDeck || null, blackDeck || null);
+      }
+
+      reset(playerColor, customFen, customMapping);
     }
     if (d === 'easy' || d === 'normal' || d === 'hard') {
       setDifficulty(d);
     }
-  }, [as, d, reset, setDifficulty]);
+  }, [as, d, deckParam, decks, reset, setDifficulty]);
 
   const boardArea = useMemo(() => {
     if (previewFen) {
@@ -45,7 +96,49 @@ export default function PlayBotMatchPage() {
       <div className="space-y-3">
         <BotChessBoard showControls={false} />
         <div className="flex gap-2">
-          <button className="px-3 py-1 rounded text-sm font-medium bg-green-600 text-white" onClick={() => reset(as === 'w' || as === 'b' ? (as as any) : undefined)}>New Game</button>
+          <button className="px-3 py-1 rounded text-sm font-medium bg-green-600 text-white" onClick={() => {
+            if (as === 'w' || as === 'b') {
+              const playerColor = as as Color;
+              let playerDeck = null;
+              let opponentDeck = null;
+
+              // Find player deck
+              if (deckParam) {
+                playerDeck = decks.find(d => d.id === deckParam && d.color === playerColor);
+              }
+
+              if (!playerDeck) {
+                playerDeck = decks.find(d => d.color === playerColor && d.isMain);
+              }
+
+              // Find opponent deck
+              const opponentColor = playerColor === 'w' ? 'b' : 'w';
+              
+              if (opponentDeckParam) {
+                opponentDeck = decks.find(d => d.id === opponentDeckParam && d.color === opponentColor);
+              }
+              
+              if (!opponentDeck) {
+                opponentDeck = decks.find(d => d.color === opponentColor && d.isMain);
+              }
+
+              // If no main deck found for opponent, use the first available deck of that color
+              if (!opponentDeck) {
+                opponentDeck = decks.find(d => d.color === opponentColor);
+              }
+
+              let customFen: string | undefined;
+              let customMapping;
+              if (playerDeck || opponentDeck) {
+                const whiteDeck = playerColor === 'w' ? playerDeck : opponentDeck;
+                const blackDeck = playerColor === 'w' ? opponentDeck : playerDeck;
+                customFen = decksToFen(whiteDeck || null, blackDeck || null);
+                customMapping = generateCustomPieceMapping(whiteDeck || null, blackDeck || null);
+              }
+
+              reset(playerColor, customFen, customMapping);
+            }
+          }}>New Game</button>
           <button className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white" onClick={() => resign('w')}>Resign (White)</button>
           <button className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white" onClick={() => resign('b')}>Resign (Black)</button>
         </div>

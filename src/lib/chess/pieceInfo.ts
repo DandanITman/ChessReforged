@@ -1,7 +1,8 @@
 import type { PieceSymbol } from "chess.js";
+import type { ExtendedPieceSymbol } from "./placement";
 
 export interface PieceInfo {
-  symbol: PieceSymbol;
+  symbol: ExtendedPieceSymbol;
   name: string;
   points: number;
   movement: string;
@@ -9,7 +10,7 @@ export interface PieceInfo {
   rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
 }
 
-export const PIECE_INFO: Record<PieceSymbol, PieceInfo> = {
+export const PIECE_INFO: Record<ExtendedPieceSymbol, PieceInfo> = {
   p: {
     symbol: "p",
     name: "Pawn",
@@ -57,10 +58,91 @@ export const PIECE_INFO: Record<PieceSymbol, PieceInfo> = {
     movement: "Moves one square in any direction",
     description: "The heart of your kingdom. Though limited in movement, his survival determines victory or defeat.",
     rarity: "Legendary"
+  },
+  // Custom pieces
+  l: {
+    symbol: "l",
+    name: "The Roaring Lion",
+    points: 6,
+    movement: "Can move 2 squares in any direction, but can't jump over pieces",
+    description: "Pride of the battlefield, this ferocious feline guards its pride with golden courage.",
+    rarity: "Epic"
+  },
+  s: {
+    symbol: "s",
+    name: "The Footman",
+    points: 2,
+    movement: "Moves 1 square forward, captures diagonally like a pawn, but can also step sideways",
+    description: "Not the flashiest piece, but the backbone of your army.",
+    rarity: "Common"
+  },
+  d: {
+    symbol: "d",
+    name: "The Skyflame Dragon",
+    points: 8,
+    movement: "Moves like a queen, but only up to 4 squares at a time",
+    description: "Flies above the fray, breathing fire on the unprepared.",
+    rarity: "Legendary"
+  },
+  c: {
+    symbol: "c",
+    name: "The Stonehurler",
+    points: 5,
+    movement: "Cannot move normally; instead, once per turn, it can attack a square up to 3 spaces away",
+    description: "Lobs heavy boulders, flattening friend or foe alike.",
+    rarity: "Rare"
+  },
+  e: {
+    symbol: "e",
+    name: "The War Elephant",
+    points: 4,
+    movement: "Moves exactly 2 squares diagonally, can jump over pieces",
+    description: "Gentle giant… until you're in the way.",
+    rarity: "Uncommon"
+  },
+  w: {
+    symbol: "w",
+    name: "The Arcane Sage",
+    points: 7,
+    movement: "Moves like a king but can teleport to any empty square once every 5 turns",
+    description: "One blink, and he's gone… or right behind you.",
+    rarity: "Epic"
+  },
+  a: {
+    symbol: "a",
+    name: "The Bowguard",
+    points: 3,
+    movement: "Moves like a pawn but can shoot diagonally up to 2 squares away without moving",
+    description: "Silent, precise, and always watching.",
+    rarity: "Uncommon"
+  },
+  h: {
+    symbol: "h",
+    name: "The Galleon",
+    points: 5,
+    movement: "Can only move along ranks or files, but sails until it hits a piece or the edge",
+    description: "The tides of war are in its favor.",
+    rarity: "Rare"
+  },
+  m: {
+    symbol: "m",
+    name: "The Commanding Steed",
+    points: 4,
+    movement: "Moves like a knight but can also step 1 square in any direction",
+    description: "The trusted leader of your cavalry.",
+    rarity: "Uncommon"
+  },
+  t: {
+    symbol: "t",
+    name: "The Stone Sentinel",
+    points: 7,
+    movement: "Moves 1 or 2 squares in any direction but cannot be captured by pawns",
+    description: "An immovable guardian carved from the earth itself.",
+    rarity: "Epic"
   }
 };
 
-export function getPieceInfo(symbol: PieceSymbol): PieceInfo {
+export function getPieceInfo(symbol: ExtendedPieceSymbol): PieceInfo {
   return PIECE_INFO[symbol];
 }
 

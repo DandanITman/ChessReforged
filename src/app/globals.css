@@ -143,6 +143,11 @@ body {
   box-shadow: 0 8px 32px rgba(225, 29, 72, 0.3), 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+.gradient-card-cyan {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  box-shadow: 0 8px 32px rgba(8, 145, 178, 0.3), 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
 /* Hover effects with enhanced depth */
 .card-hover {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -177,6 +182,10 @@ body {
   box-shadow: 0 25px 50px rgba(225, 29, 72, 0.4), 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
+.card-hover:hover.gradient-card-cyan {
+  box-shadow: 0 25px 50px rgba(8, 145, 178, 0.4), 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
 /* Default card hover for non-gradient cards */
 .card-hover:hover:not([class*="gradient-card"]) {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -190,4 +199,51 @@ body {
               linear-gradient(-45deg, transparent 75%, #f0d9b5 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Custom levitation animation for tooltip piece icon */
+@keyframes levitate-slow {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+.levitate-slow {
+  animation: levitate-slow 3s ease-in-out infinite;
+}
+
+/* Faster levitation animations for piece and tooltip */
+@keyframes levitate-fast {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+.levitate-fast {
+  animation: levitate-fast 1.6s ease-in-out infinite;
+}
+
+/* Subtle float for tooltip panel */
+@keyframes levitate-panel-fast {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+.levitate-panel-fast {
+  animation: levitate-panel-fast 2s ease-in-out infinite;
+}
+
+/* Hovering the piece wrapper animates the piece image */
+.group:hover .levitate-on-hover {
+  animation: levitate-fast 1.6s ease-in-out infinite;
+}
+
+/* Move animation for piece arrival */
+@keyframes move-pop {
+  0% { transform: scale(0.88) translateY(-2px); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 0.95; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.move-pop {
+  animation: move-pop 220ms ease-out both;
 }

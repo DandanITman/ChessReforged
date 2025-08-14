@@ -1,25 +1,22 @@
 "use client";
 
 // Simple sound effects manager with small pitch variation and pooling
-// Expected files (place them under public/sounds/osrs/):
-// - drag.wav
-// - drop.wav
-// - capture.wav
-// - win.wav
-// - select.wav
-// - illegal.wav
-// - check.wav
-// - preview.wav
+// Expected files (place them under public/sounds/):
+// - drag.mp3
+// - drop.mp3
+// - capture.mp3
+// - win.mp3
+// - select.mp3
+// - illegal.mp3
+// - check.mp3
+// - preview.mp3
 
 const basePath = "/sounds"; // default directory for Freesound placeholders
 
 function makeAudio(srcBase: string) {
-  // Try mp3 then wav
+  // Use MP3 only
   const audio = new Audio();
   audio.src = `${srcBase}.mp3`;
-  audio.addEventListener('error', () => {
-    if (!audio.src.endsWith('.wav')) audio.src = `${srcBase}.wav`;
-  }, { once: true });
   return audio;
 }
 

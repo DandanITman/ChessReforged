@@ -1,22 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { PieceSymbol, Color } from "chess.js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useProfileStore, type PackReward } from "@/lib/store/profile";
-import { getPieceInfo, getPieceRarityColor, getPieceRarityGradient } from "@/lib/chess/pieceInfo";
-import { pieceSprite } from "@/lib/chess/pieceSprites";
-import { Coins, ShoppingBag, Package, Crown, Sparkles, Zap, Gem, Palette, X, Star, Info } from "lucide-react";
+import PackOpeningModal from "@/components/PackOpeningModal";
+import { Coins, ShoppingBag, Package, Crown, Sparkles, Gem, Palette, X } from "lucide-react";
 
-const PIECE_LABEL: Record<PieceSymbol, string> = {
-  p: "Pawn",
-  n: "Knight",
-  b: "Bishop",
-  r: "Rook",
-  q: "Queen",
-  k: "King",
-};
 
 const PACKS = [
   {
@@ -59,6 +49,8 @@ export default function ShopPage() {
   const openCosmeticsPack = useProfileStore((s) => s.openCosmeticsPack);
   const [lastReceived, setLastReceived] = useState<PackReward | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPackModal, setShowPackModal] = useState(false);
+  const [lastPackType, setLastPackType] = useState<string | null>(null);
 
   function handleOpenPack(packId: string) {
     let res;
@@ -80,9 +72,36 @@ export default function ShopPage() {
     if ("error" in res) {
       setError(res.error);
       setLastReceived(null);
+      setShowPackModal(false);
+      setLastPackType(null);
     } else {
       setError(null);
       setLastReceived(res.received);
+      setShowPackModal(true);
+      setLastPackType(packId);
+    }
+  }
+
+  function handleCloseModal() {
+    setShowPackModal(false);
+    setLastReceived(null);
+    setLastPackType(null);
+  }
+
+  function handleOpenMore() {
+    if (lastPackType) {
+      // Try to open another pack of the same type
+      handleOpenPack(lastPackType);
+    } else {
+      // Fallback: close modal and scroll to packs
+      setShowPackModal(false);
+      setLastReceived(null);
+      setTimeout(() => {
+        const packsSection = document.querySelector('.packs-grid');
+        if (packsSection) {
+          packsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   }
 
@@ -129,101 +148,19 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Alerts */}
       {error && (
         <div className="rounded-md border border-red-300/60 bg-red-50/50 dark:bg-red-950/20 p-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
 
-      {/* Pack Rewards */}
-      {lastReceived && (
-        <Card className="p-6 border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 animate-in fade-in-0 slide-in-from-top-4 duration-500">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-emerald-600" />
-              <div className="font-semibold text-emerald-800 dark:text-emerald-300">Pack Opened!</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLastReceived(null)}
-              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
 
-          {/* Pieces Received */}
-          <div className="mb-4">
-            <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-3">Pieces Received:</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {lastReceived.pieces.map((item, i) => {
-                const pieceInfo = getPieceInfo(item.type);
-                const rarityColor = getPieceRarityColor(pieceInfo.rarity);
-                const rarityGradient = getPieceRarityGradient(pieceInfo.rarity);
 
-                return (
-                  <div key={i} className="relative overflow-hidden rounded-lg border bg-card p-4 hover:shadow-md transition-shadow">
-                    {/* Rarity gradient background */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${rarityGradient} opacity-5`} />
 
-                    <div className="relative flex items-start gap-3">
-                      {/* Piece Image */}
-                      <div className="flex-shrink-0">
-                        <img
-                          src={pieceSprite("w" as Color, item.type)}
-                          alt={pieceInfo.name}
-                          className="w-12 h-12 drop-shadow-sm"
-                        />
-                      </div>
-
-                      {/* Piece Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h5 className="font-semibold text-sm">{item.count}x {pieceInfo.name}</h5>
-                          <span className={`text-xs font-medium ${rarityColor}`}>
-                            {pieceInfo.rarity}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 mb-2">
-                          <Star className="h-3 w-3 text-yellow-500" />
-                          <span className="text-xs font-medium">{pieceInfo.points} points</span>
-                        </div>
-
-                        <p className="text-xs text-muted-foreground mb-2">
-                          {pieceInfo.movement}
-                        </p>
-
-                        <p className="text-xs italic text-muted-foreground">
-                          "{pieceInfo.description}"
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Points Received */}
-          <div className="flex justify-center">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-100 dark:bg-purple-950/30">
-              <div className="relative">
-                <Gem className="h-4 w-4 text-purple-600" />
-                <div className="absolute inset-0 animate-pulse">
-                  <Gem className="h-4 w-4 text-purple-300 opacity-50" />
-                </div>
-              </div>
-              <span className="text-sm font-medium">+{lastReceived.orbs} Orbs</span>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {/* Packs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="packs-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {PACKS.map((pack) => {
           const IconComponent = pack.icon;
           const canAfford = credits >= pack.cost;
@@ -310,6 +247,14 @@ export default function ShopPage() {
           );
         })}
       </div>
+
+      {/* Pack Opening Modal */}
+      <PackOpeningModal
+        isOpen={showPackModal}
+        onClose={handleCloseModal}
+        packReward={lastReceived}
+        onOpenMore={handleOpenMore}
+      />
     </section>
   );
 }

@@ -82,6 +82,11 @@ export default function TopBar() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className="px-4 py-2 text-sm font-medium rounded-md hover:bg-primary/10 hover:text-primary transition-colors">
+                  <Link href="/inventory">Inventory</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className="px-4 py-2 text-sm font-medium rounded-md hover:bg-primary/10 hover:text-primary transition-colors">
                   <Link href="/achievements">Achievements</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>

@@ -1,4 +1,4 @@
-import { Sword, Bot, Users, Settings, Puzzle, ShoppingBag, Eye, Crown, Zap, Star, Clock, Play } from "lucide-react";
+import { Sword, Bot, Users, Puzzle, ShoppingBag, Package, Eye, Crown, Zap, Star, Clock, Play } from "lucide-react";
 import { NavTile } from "@/components/NavTile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,20 +62,20 @@ export default function Home() {
           badge="New Packs!"
         />
         <NavTile
+          href="/inventory"
+          title="Inventory"
+          description="Manage pieces and apply cosmetics"
+          icon={Package}
+          gradient="gradient-card-cyan"
+          badge="Customize"
+        />
+        <NavTile
           href="/achievements"
           title="Achievements"
           description="Track your progress and earn rewards"
           icon={Puzzle}
           gradient="gradient-card-rose"
           badge="12/50 Unlocked"
-        />
-        <NavTile
-          href="/settings"
-          title="Settings"
-          description="Customize your gaming experience"
-          icon={Settings}
-          gradient="gradient-card-slate"
-          badge="Personalize"
         />
       </div>
 

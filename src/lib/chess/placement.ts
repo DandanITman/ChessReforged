@@ -1,17 +1,32 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
 
+// Extended piece symbols for custom pieces
+export type ExtendedPieceSymbol = PieceSymbol | 'l' | 's' | 'd' | 'c' | 'e' | 'w' | 'a' | 'h' | 'm' | 't';
+
 export type EditorPiece = {
   color: Color; // 'w' or 'b'
-  type: PieceSymbol; // 'p' | 'n' | 'b' | 'r' | 'q' | 'k'
+  type: ExtendedPieceSymbol; // Standard pieces + custom pieces
 };
 
-export const PIECE_COSTS: Record<PieceSymbol, number> = {
+export const PIECE_COSTS: Record<ExtendedPieceSymbol, number> = {
+  // Standard pieces
   p: 1,
   n: 3,
   b: 3,
   r: 5,
   q: 8,
   k: 0, // king is mandatory but costs 0
+  // Custom pieces
+  l: 6, // Lion
+  s: 2, // Soldier
+  d: 8, // Dragon
+  c: 5, // Catapult
+  e: 4, // Elephant
+  w: 7, // Wizard
+  a: 3, // Archer
+  h: 5, // Ship
+  m: 4, // Knight Commander
+  t: 7, // Tower Golem
 };
 
 // Budget note:
@@ -114,7 +129,7 @@ export function canPlacePiece(args: {
   color: Color;
   budget?: number;
   sq: Square;
-  type: PieceSymbol;
+  type: ExtendedPieceSymbol;
 }): { ok: boolean; reason?: string } {
   const { placed, color, sq, type } = args;
   const budget = args.budget ?? DEFAULT_BUDGET;

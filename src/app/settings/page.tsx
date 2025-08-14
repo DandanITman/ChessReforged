@@ -51,7 +51,7 @@ export default function SettingsPage() {
     privacy: "public"
   });
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 

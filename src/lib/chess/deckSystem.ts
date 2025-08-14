@@ -1,5 +1,5 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
-import { DEFAULT_BUDGET, type EditorPiece } from "./placement";
+import { DEFAULT_BUDGET, type EditorPiece, type ExtendedPieceSymbol } from "./placement";
 
 export interface ArmyDeck {
   id: string;
@@ -9,6 +9,7 @@ export interface ArmyDeck {
   placed: Partial<Record<Square, EditorPiece>>;
   createdAt: number;
   lastModified: number;
+  isMain?: boolean; // Whether this is the main/default deck for this color
 }
 
 export interface DeckTemplate {
@@ -48,7 +49,7 @@ export function createEmptyDeck(color: Color, name?: string): ArmyDeck {
 export const DEFAULT_DECK_TEMPLATES: Record<Color, DeckTemplate[]> = {
   w: [
     {
-      name: "Classic Setup",
+      name: "Classic Setup (Default)",
       description: "Traditional chess starting position",
       placement: {
         a1: { color: 'w', type: 'r' },
@@ -93,7 +94,7 @@ export const DEFAULT_DECK_TEMPLATES: Record<Color, DeckTemplate[]> = {
   ],
   b: [
     {
-      name: "Classic Setup",
+      name: "Classic Setup (Default)",
       description: "Traditional chess starting position",
       placement: {
         a8: { color: 'b', type: 'r' },
@@ -150,6 +151,7 @@ export function createDefaultDecks(color: Color): ArmyDeck[] {
     placed: template.placement,
     createdAt: Date.now() - (templates.length - index) * 1000, // Stagger creation times
     lastModified: Date.now() - (templates.length - index) * 1000,
+    isMain: index === 0, // First deck is the main deck
   }));
 }
 
@@ -176,9 +178,135 @@ export function isDeckValidForBudget(deck: ArmyDeck, budget: number): boolean {
 }
 
 // Get piece cost (same as PIECE_COSTS but centralized)
-function getPieceCost(type: PieceSymbol): number {
-  const costs: Record<PieceSymbol, number> = {
-    p: 1, n: 3, b: 3, r: 5, q: 8, k: 0
+function getPieceCost(type: ExtendedPieceSymbol): number {
+  const costs: Record<ExtendedPieceSymbol, number> = {
+    // Standard pieces
+    p: 1, n: 3, b: 3, r: 5, q: 8, k: 0,
+    // Custom pieces
+    l: 6, s: 2, d: 8, c: 5, e: 4, w: 7, a: 3, h: 5, m: 4, t: 7
   };
   return costs[type] || 0;
+}
+
+// Map custom pieces to standard pieces for chess.js compatibility
+const CUSTOM_TO_STANDARD_MAPPING: Record<string, string> = {
+  // Map to standard pieces that are supersets of intended movement so we can restrict via UI
+  'l': 'q', // Lion -> Queen (we'll restrict to exactly 2 squares)
+  's': 'q', // Soldier -> Queen (we'll restrict to fwd/diagonal-capture/sideways 1)
+  'd': 'q', // Dragon -> Queen (we'll restrict to <=4 squares)
+  'c': 'r', // Catapult -> Rook (cannot move in our rules, filtered in UI)
+  'e': 'b', // Elephant -> Bishop (we'll restrict to exactly 2 diagonally; jump not supported)
+  'w': 'q', // Wizard -> Queen (we'll restrict to king-like 1-square step)
+  'a': 'p', // Archer -> Pawn (shooting not implemented yet)
+  'h': 'r', // Galleon -> Rook
+  'm': 'n', // Knight Commander -> Knight (extra king step not yet supported)
+  't': 'q', // Stone Sentinel -> Queen (we'll restrict to 1-2 squares)
+};
+
+// Convert deck placements to FEN string
+export function decksToFen(whiteDeck: ArmyDeck | null, blackDeck: ArmyDeck | null): string {
+  // Initialize empty 8x8 board
+  const board: (string | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+
+  // Place white pieces
+  if (whiteDeck) {
+    for (const [square, piece] of Object.entries(whiteDeck.placed)) {
+      if (piece && piece.color === 'w') {
+        const file = square.charCodeAt(0) - 'a'.charCodeAt(0); // 0-7
+        const rank = parseInt(square[1]) - 1; // 0-7
+        if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+          // Map custom pieces to standard pieces for chess.js compatibility
+          const mappedType = CUSTOM_TO_STANDARD_MAPPING[piece.type] || piece.type;
+          board[7 - rank][file] = mappedType.toUpperCase(); // White pieces are uppercase
+        }
+      }
+    }
+  }
+
+  // Place black pieces
+  if (blackDeck) {
+    for (const [square, piece] of Object.entries(blackDeck.placed)) {
+      if (piece && piece.color === 'b') {
+        const file = square.charCodeAt(0) - 'a'.charCodeAt(0); // 0-7
+        const rank = parseInt(square[1]) - 1; // 0-7
+        if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+          // Map custom pieces to standard pieces for chess.js compatibility
+          const mappedType = CUSTOM_TO_STANDARD_MAPPING[piece.type] || piece.type;
+          board[7 - rank][file] = mappedType.toLowerCase(); // Black pieces are lowercase
+        }
+      }
+    }
+  }
+
+  // Convert board to FEN notation
+  const fenRanks: string[] = [];
+  for (let rank = 0; rank < 8; rank++) {
+    let fenRank = '';
+    let emptyCount = 0;
+
+    for (let file = 0; file < 8; file++) {
+      const piece = board[rank][file];
+      if (piece) {
+        if (emptyCount > 0) {
+          fenRank += emptyCount.toString();
+          emptyCount = 0;
+        }
+        fenRank += piece;
+      } else {
+        emptyCount++;
+      }
+    }
+
+    if (emptyCount > 0) {
+      fenRank += emptyCount.toString();
+    }
+
+    fenRanks.push(fenRank);
+  }
+
+  // Standard FEN format: position active_color castling en_passant halfmove fullmove
+  // For custom armies, we'll disable castling and set standard values
+  return `${fenRanks.join('/')} w - - 0 1`;
+}
+
+// Store custom piece mapping for a game
+export interface CustomPieceMapping {
+  [square: string]: {
+    actualType: ExtendedPieceSymbol;
+    color: Color;
+  };
+}
+
+// Generate custom piece mapping from decks
+export function generateCustomPieceMapping(whiteDeck: ArmyDeck | null, blackDeck: ArmyDeck | null): CustomPieceMapping {
+  const mapping: CustomPieceMapping = {};
+
+  // Standard piece types that don't need custom mapping
+  const standardPieces: Set<ExtendedPieceSymbol> = new Set(['p', 'n', 'b', 'r', 'q', 'k']);
+
+  // Map white pieces (only custom pieces)
+  if (whiteDeck) {
+    for (const [square, piece] of Object.entries(whiteDeck.placed)) {
+      if (piece && piece.color === 'w' && !standardPieces.has(piece.type)) {
+        mapping[square] = {
+          actualType: piece.type,
+          color: piece.color,
+        };
+      }
+    }
+  }
+
+  // Map black pieces (only custom pieces)
+  if (blackDeck) {
+    for (const [square, piece] of Object.entries(blackDeck.placed)) {
+      if (piece && piece.color === 'b' && !standardPieces.has(piece.type)) {
+        mapping[square] = {
+          actualType: piece.type,
+          color: piece.color,
+        };
+      }
+    }
+  }
+
+  return mapping;
 }

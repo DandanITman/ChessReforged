@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEditorStore } from "@/lib/store/editor";
+import { useNotificationStore } from "@/lib/store/notifications";
 import { type ArmyDeck } from "@/lib/chess/deckSystem";
-import { 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Check, 
+import ConfirmDialog from "@/components/ConfirmDialog";
+import {
+  Plus,
+  Trash2,
+  Copy,
+  Check,
   X,
-  Target
+  Target,
+  Save,
+  Star
 } from "lucide-react";
 
 interface CompactDeckSelectorProps {
@@ -31,9 +35,14 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
   const duplicateDeck = useEditorStore((s) => s.duplicateDeck);
   const initializeForLevel = useEditorStore((s) => s.initializeForLevel);
   const clear = useEditorStore((s) => s.clear);
+  const saveDeck = useEditorStore((s) => s.saveDeck);
+  const setMainDeck = useEditorStore((s) => s.setMainDeck);
+
+  const addNotification = useNotificationStore((s) => s.addNotification);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newDeckName, setNewDeckName] = useState("");
+  const [showCloneConfirm, setShowCloneConfirm] = useState(false);
 
   // Initialize budget for player level
   React.useEffect(() => {
@@ -44,15 +53,31 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
 
   const handleCreateDeck = () => {
     if (!newDeckName.trim()) return;
-    
-    createDeck(newDeckName.trim());
+
+    const newDeckId = createDeck(newDeckName.trim());
+    console.log("Created new deck:", newDeckId);
     setNewDeckName("");
     setShowCreateForm(false);
+
+    addNotification({
+      type: "success",
+      message: `Deck "${newDeckName.trim()}" created successfully!`,
+      duration: 3000,
+    });
   };
 
   const handleDuplicate = () => {
     if (!currentDeck) return;
-    duplicateDeck(currentDeck.id, `${currentDeck.name} (Copy)`);
+    const newDeckId = duplicateDeck(currentDeck.id, `${currentDeck.name} (Copy)`);
+    addNotification({
+      type: "success",
+      message: `Deck "${currentDeck.name}" was cloned successfully!`,
+      duration: 3000,
+    });
+  };
+
+  const handleCloneClick = () => {
+    setShowCloneConfirm(true);
   };
 
   const handleDelete = () => {
@@ -60,12 +85,41 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
     deleteDeck(currentDeck.id);
   };
 
+  const handleDeckChange = (deckId: string) => {
+    switchToDeck(deckId);
+  };
+
+  const handleSave = () => {
+    if (!currentDeck) return;
+    saveDeck();
+    addNotification({
+      type: "success",
+      message: `Deck "${currentDeck.name}" saved successfully!`,
+      duration: 3000,
+    });
+  };
+
+  const handleSetMain = () => {
+    if (!currentDeck) return;
+    setMainDeck(currentDeck.id);
+    addNotification({
+      type: "success",
+      message: `"${currentDeck.name}" set as main deck for ${color === 'w' ? 'White' : 'Black'}!`,
+      duration: 3000,
+    });
+  };
+
   const getDeckStats = (deck: ArmyDeck) => {
     const pieces = Object.values(deck.placed).filter(p => p?.color === color);
     const totalCost = pieces.reduce((sum, piece) => {
       if (!piece) return sum;
-      const costs = { p: 1, n: 3, b: 3, r: 5, q: 8, k: 0 };
-      return sum + (costs[piece.type] || 0);
+      const costs = {
+        // Standard pieces
+        p: 1, n: 3, b: 3, r: 5, q: 8, k: 0,
+        // Custom pieces
+        l: 6, s: 2, d: 8, c: 5, e: 4, w: 7, a: 3, h: 5, m: 4, t: 7
+      };
+      return sum + (costs[piece.type as keyof typeof costs] || 0);
     }, 0);
     
     return {
@@ -81,7 +135,7 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Deck:</span>
-          <Select value={currentDeck?.id || ""} onValueChange={switchToDeck}>
+          <Select value={currentDeck?.id || ""} onValueChange={handleDeckChange}>
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Select deck..." />
             </SelectTrigger>
@@ -92,6 +146,9 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
                   <SelectItem key={deck.id} value={deck.id}>
                     <div className="flex items-center gap-2">
                       <span>{deck.name}</span>
+                      {deck.isMain && (
+                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                      )}
                       <span className={`text-xs px-1.5 py-0.5 rounded ${
                         stats.isValid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
@@ -119,7 +176,27 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
           <Button
             size="sm"
             variant="outline"
-            onClick={handleDuplicate}
+            onClick={handleSave}
+            disabled={!currentDeck}
+            className="h-8 px-2"
+            title="Save current deck"
+          >
+            <Save className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSetMain}
+            disabled={!currentDeck || currentDeck.isMain}
+            className="h-8 px-2 text-yellow-600 hover:text-yellow-700"
+            title="Set as main deck"
+          >
+            <Star className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCloneClick}
             disabled={!currentDeck}
             className="h-8 px-2"
             title="Clone current deck"
@@ -179,10 +256,28 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
             </span>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => clear()}>
+        <Button variant="outline" size="sm" onClick={() => {
+          clear();
+          addNotification({
+            type: "success",
+            message: "Army cleared successfully!",
+            duration: 2000,
+          });
+        }}>
           Clear Army
         </Button>
       </div>
+
+      {/* Clone Confirmation Dialog */}
+      <ConfirmDialog
+        open={showCloneConfirm}
+        onOpenChange={setShowCloneConfirm}
+        title="Clone Deck"
+        description={`Are you sure you want to clone "${currentDeck?.name}"? This will create a copy of the deck.`}
+        confirmText="Clone"
+        cancelText="Cancel"
+        onConfirm={handleDuplicate}
+      />
     </div>
   );
 }

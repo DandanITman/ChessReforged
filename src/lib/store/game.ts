@@ -77,12 +77,24 @@ export const useGameStore = create<GameState>((set, get) => {
   };
 });
 
+import type { ExtendedPieceSymbol } from "@/lib/chess/placement";
+
 // Unicode piece glyphs for quick rendering
-const GLYPHS: Record<Color, Record<PieceSymbol, string>> = {
-  w: { p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔" },
-  b: { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" },
+const GLYPHS: Record<Color, Record<ExtendedPieceSymbol, string>> = {
+  w: {
+    // Standard pieces
+    p: "♙", n: "♘", b: "♗", r: "♖", q: "♕", k: "♔",
+    // Custom pieces (using placeholder symbols)
+    l: "🦁", s: "⚔", d: "🐉", c: "🏹", e: "🐘", w: "🧙", a: "🏹", h: "⛵", m: "🐎", t: "🗿"
+  },
+  b: {
+    // Standard pieces
+    p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
+    // Custom pieces (using placeholder symbols)
+    l: "🦁", s: "⚔", d: "🐉", c: "🏹", e: "🐘", w: "🧙", a: "🏹", h: "⛵", m: "🐎", t: "🗿"
+  },
 };
 
-export function pieceGlyph(color: Color, type: PieceSymbol): string {
-  return GLYPHS[color][type];
+export function pieceGlyph(color: Color, type: ExtendedPieceSymbol): string {
+  return GLYPHS[color][type] || "?";
 }

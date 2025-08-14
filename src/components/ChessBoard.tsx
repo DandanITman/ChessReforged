@@ -6,6 +6,8 @@ import { useGameStore } from "@/lib/store/game";
 import { pieceSprite } from "@/lib/chess/pieceSprites";
 import { Chess, type Square, type Color, type PieceSymbol } from "chess.js";
 import { cn } from "@/lib/utils";
+import type { ExtendedPieceSymbol } from "@/lib/chess/placement";
+import PieceTooltip from "@/components/PieceTooltip";
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 
@@ -49,7 +51,7 @@ function DraggablePiece({
         onSelect(square);
       }}
       className={cn(
-        "absolute inset-0 flex items-center justify-center text-3xl select-none",
+        "absolute inset-0 flex items-center justify-center text-3xl select-none group",
         "transition-transform",
         selected ? "ring-2 ring-blue-500/70 ring-offset-2 ring-offset-transparent" : "",
         isDragging ? "cursor-grabbing" : "cursor-grab",
@@ -57,11 +59,13 @@ function DraggablePiece({
       style={style}
       aria-label={`${color === "w" ? "White" : "Black"} ${type} on ${square}`}
     >
-      <img
-        src={pieceSprite(color, type)}
-        alt={`${color === "w" ? "White" : "Black"} ${type}`}
-        className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)]"
-      />
+      <PieceTooltip pieceType={type as ExtendedPieceSymbol} color={color} delayMs={1000}>
+        <img
+          src={pieceSprite(color, type)}
+          alt={`${color === "w" ? "White" : "Black"} ${type}`}
+          className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)] levitate-on-hover"
+        />
+      </PieceTooltip>
     </button>
   );
 }
