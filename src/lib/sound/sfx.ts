@@ -10,6 +10,7 @@
 // - illegal.mp3
 // - check.mp3
 // - preview.mp3
+// - achievement.mp3
 
 const basePath = "/sounds"; // default directory for Freesound placeholders
 
@@ -55,6 +56,7 @@ const pools = {
   illegal: makePool(`${basePath}/illegal`, 2),
   check: makePool(`${basePath}/check`, 2),
   preview: makePool(`${basePath}/preview`, 2),
+  achievement: makePool(`${basePath}/achievement`, 2),
 };
 
 import { useSettingsStore } from "@/lib/store/settings";
@@ -86,6 +88,9 @@ export const SFX = {
   },
   preview(volume = 0.5) {
     if (!this.enabled()) return; pools.preview.play(volume, 0, 100);
+  },
+  achievement(volume = 0.8) {
+    if (!this.enabled()) return; pools.achievement.play(volume, 0, 300);
   },
 };
 

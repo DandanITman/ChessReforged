@@ -459,6 +459,15 @@ export const useEditorStore = create<EditorState>()(
 
           const newPlaced = { ...placed, [sq]: { color, type: t } as EditorPiece };
           updateCurrentDeck({ placed: newPlaced });
+          
+          // Track army creation achievements
+          try {
+            const profileStore = useProfileStore.getState();
+            profileStore.trackArmyCreation();
+          } catch (error) {
+            // Ignore if profile store not available
+          }
+          
           return { ok: true };
         },
 

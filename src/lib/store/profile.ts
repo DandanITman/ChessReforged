@@ -6,6 +6,7 @@ import type { PieceSymbol } from "chess.js";
 import { PIECE_COSTS, type ExtendedPieceSymbol } from "@/lib/chess/placement";
 import { ProfileSync, InventorySync, DebouncedSave } from "@/lib/firebase/dataSync";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPieceInfo } from "@/lib/chess/pieceInfo";
 
 type Inventory = Record<ExtendedPieceSymbol, number>;
 
@@ -53,6 +54,12 @@ type ProfileState = {
   equipCosmetic: (piece: ExtendedPieceSymbol, id: string) => { ok: true } | { ok: false; reason: string };
   unequipCosmetic: (piece: ExtendedPieceSymbol) => void;
   markAchieved: (id: string) => void;
+  updateAchievementProgress: (id: string, increment?: number) => void;
+  trackGameVictory: (moveCount: number) => void;
+  trackPackOpening: (packType: string, pieces: { type: ExtendedPieceSymbol; count: number }[]) => void;
+  trackArmyCreation: () => void;
+  trackCreditsSpent: (amount: number) => void;
+  updateGameStats: (gameResult: { won: boolean; lost: boolean; draw: boolean; moveCount: number; wasCheckmate: boolean }) => void;
   // Firebase sync actions
   syncWithFirebase: (uid: string) => Promise<void>;
   saveToFirebase: (uid: string) => Promise<void>;
@@ -80,20 +87,135 @@ const initialInventory: Inventory = {
 };
 
 const initialAchievements: Achievement[] = [
+  // Editor achievements
   {
     id: "first-edit",
-    title: "First Edit",
-    description: "Place a piece on the board in the editor.",
+    title: "Army Architect",
+    description: "Create your first custom army in the editor.",
     progress: 0,
     goal: 1,
     achieved: false,
   },
   {
-    id: "ten-moves",
-    title: "Quick Hands",
-    description: "Make 10 moves in Play vs Bot.",
+    id: "army-master",
+    title: "Master Strategist",
+    description: "Create 10 different army configurations.",
     progress: 0,
     goal: 10,
+    achieved: false,
+  },
+
+  // Game victories
+  {
+    id: "first-victory",
+    title: "First Blood",
+    description: "Win your first game against any opponent.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+  {
+    id: "ten-victories",
+    title: "Warrior",
+    description: "Achieve 10 victories in battle.",
+    progress: 0,
+    goal: 10,
+    achieved: false,
+  },
+  {
+    id: "hundred-victories",
+    title: "Conqueror",
+    description: "Dominate the battlefield with 100 victories.",
+    progress: 0,
+    goal: 100,
+    achieved: false,
+  },
+
+  // Pack opening achievements
+  {
+    id: "first-pack",
+    title: "Treasure Hunter",
+    description: "Open your first pack and discover new pieces.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+  {
+    id: "ten-packs",
+    title: "Collector",
+    description: "Open 10 packs to expand your arsenal.",
+    progress: 0,
+    goal: 10,
+    achieved: false,
+  },
+  {
+    id: "hundred-packs",
+    title: "Hoarder Supreme",
+    description: "Open 100 packs - you really love opening things!",
+    progress: 0,
+    goal: 100,
+    achieved: false,
+  },
+
+  // Gameplay achievements
+  {
+    id: "first-checkmate",
+    title: "Checkmate Master",
+    description: "Deliver your first checkmate.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+  {
+    id: "quick-victory",
+    title: "Speed Demon",
+    description: "Win a game in under 20 moves.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+  {
+    id: "marathon-game",
+    title: "Endurance Champion",
+    description: "Play a game lasting over 100 moves.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+
+  // Economy achievements
+  {
+    id: "big-spender",
+    title: "Big Spender",
+    description: "Spend 10,000 credits in the shop.",
+    progress: 0,
+    goal: 10000,
+    achieved: false,
+  },
+  {
+    id: "orb-collector",
+    title: "Orb Collector",
+    description: "Accumulate 1,000 orbs for crafting.",
+    progress: 0,
+    goal: 1000,
+    achieved: false,
+  },
+
+  // Special achievements
+  {
+    id: "legendary-pull",
+    title: "Legendary Fortune",
+    description: "Pull a Legendary piece from a pack.",
+    progress: 0,
+    goal: 1,
+    achieved: false,
+  },
+  {
+    id: "patron",
+    title: "Royal Patron",
+    description: "Support the realm by making any purchase.", // For future IAP
+    progress: 0,
+    goal: 1,
     achieved: false,
   },
 ];
@@ -253,6 +375,10 @@ export const useProfileStore = create<ProfileState>()(persist<ProfileState>((set
       };
     });
 
+    // Track achievements
+    get().trackPackOpening('basic', pieces);
+    get().trackCreditsSpent(cost);
+
     // Save pack opening results to Firebase
     debouncedSave.debounce('pack-basic', async () => {
       try {
@@ -317,6 +443,10 @@ export const useProfileStore = create<ProfileState>()(persist<ProfileState>((set
         orbs: s.orbs + orbs
       };
     });
+
+    // Track achievements
+    get().trackPackOpening('tbd', pieces);
+    get().trackCreditsSpent(cost);
 
     // Save pack opening results to Firebase
     debouncedSave.debounce('pack-tbd', async () => {
@@ -445,6 +575,110 @@ export const useProfileStore = create<ProfileState>()(persist<ProfileState>((set
         a.id === id ? { ...a, achieved: true, progress: a.goal } : a
       ),
     }));
+  },
+
+  updateAchievementProgress(id: string, increment: number = 1) {
+    set((s: ProfileState) => {
+      const updatedAchievements = s.achievements.map((a: Achievement) => {
+        if (a.id === id && !a.achieved) {
+          const newProgress = Math.min(a.goal, a.progress + increment);
+          const newlyAchieved = newProgress >= a.goal && !a.achieved;
+          const updatedAchievement = {
+            ...a,
+            progress: newProgress,
+            achieved: newProgress >= a.goal
+          };
+          
+          // Trigger notification for newly completed achievements
+          if (newlyAchieved) {
+            // Import the notification store dynamically to avoid circular dependencies
+            import('@/lib/store/notifications').then(({ useNotificationStore }) => {
+              useNotificationStore.getState().showAchievementNotification(updatedAchievement);
+            }).catch(error => {
+              console.log('Could not show achievement notification:', error);
+            });
+          }
+          
+          return updatedAchievement;
+        }
+        return a;
+      });
+      
+      return { achievements: updatedAchievements };
+    });
+  },
+
+  trackGameVictory(moveCount: number) {
+    const state = get();
+    
+    // Track victory achievements
+    state.updateAchievementProgress("first-victory");
+    state.updateAchievementProgress("ten-victories");
+    state.updateAchievementProgress("hundred-victories");
+    
+    // Track special move-based achievements
+    if (moveCount < 20) {
+      state.updateAchievementProgress("quick-victory");
+    }
+    if (moveCount > 100) {
+      state.updateAchievementProgress("marathon-game");
+    }
+  },
+
+  trackPackOpening(packType: string, pieces: { type: ExtendedPieceSymbol; count: number }[]) {
+    const state = get();
+    
+    // Track pack opening achievements
+    state.updateAchievementProgress("first-pack");
+    state.updateAchievementProgress("ten-packs");
+    state.updateAchievementProgress("hundred-packs");
+    
+    // Check for legendary pieces
+    const hasLegendary = pieces.some(p => {
+      const pieceInfo = getPieceInfo(p.type);
+      return pieceInfo?.rarity === 'Legendary';
+    });
+    
+    if (hasLegendary) {
+      state.updateAchievementProgress("legendary-pull");
+    }
+  },
+
+  trackArmyCreation() {
+    const state = get();
+    state.updateAchievementProgress("first-edit");
+    state.updateAchievementProgress("army-master");
+  },
+
+  trackCreditsSpent(amount: number) {
+    const state = get();
+    state.updateAchievementProgress("big-spender", amount);
+  },
+
+  updateGameStats(gameResult: { won: boolean; lost: boolean; draw: boolean; moveCount: number; wasCheckmate: boolean }) {
+    // This is a placeholder - in a real implementation, this would update the user's profile
+    // For now, we'll just track the data locally for achievements
+    console.log('Game completed:', gameResult);
+    
+    // Update achievements based on game result
+    if (gameResult.won) {
+      this.updateAchievementProgress("first-victory");
+      this.updateAchievementProgress("ten-victories");
+      this.updateAchievementProgress("hundred-victories");
+    }
+    
+    if (gameResult.wasCheckmate) {
+      this.updateAchievementProgress("first-checkmate");
+    }
+    
+    // Track move-based achievements
+    if (gameResult.won && gameResult.moveCount < 20) {
+      this.updateAchievementProgress("quick-victory");
+    }
+    
+    if (gameResult.moveCount > 100) {
+      this.updateAchievementProgress("marathon-game");
+    }
   },
 }), { name: "chess-reforged-profile", version: 2 }));
 

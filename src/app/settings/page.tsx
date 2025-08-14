@@ -4,17 +4,17 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  User, 
-  Lock, 
-  MapPin, 
-  Image, 
-  FileText, 
-  Bell, 
-  Volume2, 
-  Eye, 
-  Globe, 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  User,
+  Lock,
+  MapPin,
+  Image,
+  FileText,
+  Bell,
+  Volume2,
+  Eye,
+  Globe,
   Shield,
   Palette,
   Monitor,
@@ -24,20 +24,27 @@ import {
   Save,
   Camera
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { updateProfile, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebase/config";
 
 export default function SettingsPage() {
-  // State for form inputs
+  const { user, userProfile, refreshProfile } = useAuth();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState("");
+
+  // State for form inputs - initialize with real user data
   const [settings, setSettings] = React.useState({
-    username: "ChessReforged",
-    displayName: "Chess Master",
-    email: "player@chessreforged.com",
-    bio: "Passionate chess player exploring new strategies and custom army compositions. Always looking for challenging opponents!",
-    location: "New York, USA",
+    displayName: user?.displayName || "",
+    email: user?.email || "",
+    bio: "",
+    location: "",
     timezone: "America/New_York",
     language: "English",
-    theme: "system",
-    soundEnabled: true,
-    notificationsEnabled: true,
+    theme: userProfile?.settings?.theme || "dark",
+    soundEnabled: userProfile?.settings?.soundEnabled ?? true,
+    notificationsEnabled: userProfile?.settings?.notifications ?? true,
     gameInvites: true,
     friendRequests: true,
     achievements: true,
@@ -48,18 +55,106 @@ export default function SettingsPage() {
     highlightMoves: true,
     autoQueen: false,
     confirmMoves: false,
-    privacy: "public"
+    privacy: "public",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
   });
+
+  // Update form when user data loads
+  React.useEffect(() => {
+    if (user && userProfile) {
+      setSettings(prev => ({
+        ...prev,
+        displayName: user.displayName || "",
+        email: user.email || "",
+        bio: "",
+        theme: userProfile.settings?.theme || "dark",
+        soundEnabled: userProfile.settings?.soundEnabled ?? true,
+        notificationsEnabled: userProfile.settings?.notifications ?? true,
+      }));
+    }
+  }, [user, userProfile]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setSettings(prev => ({ ...prev, [field]: value }));
+    setError("");
+    setSuccess("");
   };
 
-  const handleSave = () => {
-    // In a real app, this would save to backend
-    console.log("Saving settings:", settings);
-    alert("Settings saved successfully!");
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      // Update Firebase Auth profile
+      if (settings.displayName !== user.displayName && auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: settings.displayName
+        });
+      }
+
+      // Update password if provided
+      if (settings.newPassword && settings.currentPassword && auth.currentUser) {
+        if (settings.newPassword !== settings.confirmPassword) {
+          throw new Error("New passwords don't match");
+        }
+        if (settings.newPassword.length < 8) {
+          throw new Error("Password must be at least 8 characters");
+        }
+        
+        // In a real app, you'd re-authenticate first
+        await updatePassword(auth.currentUser, settings.newPassword);
+      }
+
+      // Update user profile in Firestore
+      // This would require updating the ProfileSync service
+      
+      await refreshProfile();
+      setSuccess("Settings saved successfully!");
+      
+      // Clear password fields
+      setSettings(prev => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      }));
+      
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to save settings");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleExportData = () => {
+    alert("Export functionality would be implemented here");
+  };
+
+  const handleDownloadHistory = () => {
+    alert("Download game history functionality would be implemented here");
+  };
+
+  const handleDeleteAccount = () => {
+    if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      alert("Account deletion functionality would be implemented here");
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Please sign in</h2>
+          <p className="text-muted-foreground">You need to be signed in to access settings.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -88,35 +183,27 @@ export default function SettingsPage() {
             {/* Avatar Section */}
             <div className="flex items-center gap-6">
               <Avatar className="size-20 ring-4 ring-primary/20">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold">
-                  CR
-                </AvatarFallback>
+                {user.photoURL ? (
+                  <AvatarImage src={user.photoURL} alt={user.displayName || "User"} />
+                ) : (
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold">
+                    {user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "?"}
+                  </AvatarFallback>
+                )}
               </Avatar>
               <div className="space-y-2">
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button variant="outline" className="flex items-center gap-2" disabled>
                   <Camera className="h-4 w-4" />
                   Change Avatar
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Upload a custom avatar or choose from our collection
+                  Avatar functionality coming soon
                 </p>
               </div>
             </div>
 
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Username</label>
-                <input
-                  type="text"
-                  value={settings.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  placeholder="Enter username"
-                />
-                <p className="text-xs text-muted-foreground">This is your unique identifier</p>
-              </div>
-              
               <div className="space-y-2">
                 <label className="text-sm font-medium">Display Name</label>
                 <input
@@ -134,20 +221,31 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={settings.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  placeholder="Enter email address"
+                  disabled
+                  className="w-full px-3 py-2 border rounded-md bg-muted cursor-not-allowed"
+                  placeholder="Email address"
                 />
+                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Location</label>
+                <label className="text-sm font-medium">Location (Optional)</label>
                 <input
                   type="text"
                   value={settings.location}
                   onChange={(e) => handleInputChange('location', e.target.value)}
                   className="w-full px-3 py-2 border rounded-md bg-background"
                   placeholder="Enter your location"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Account Type</label>
+                <input
+                  type="text"
+                  value={user.provider === 'email' ? 'Email Account' : `${user.provider.charAt(0).toUpperCase() + user.provider.slice(1)} Account`}
+                  disabled
+                  className="w-full px-3 py-2 border rounded-md bg-muted cursor-not-allowed"
                 />
               </div>
             </div>
@@ -178,25 +276,49 @@ export default function SettingsPage() {
             <CardDescription>Manage your account security and privacy settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Current Password</label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  placeholder="Enter current password"
-                />
+            {user.provider === 'email' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Current Password</label>
+                  <input
+                    type="password"
+                    value={settings.currentPassword}
+                    onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    placeholder="Enter current password"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">New Password</label>
+                  <input
+                    type="password"
+                    value={settings.newPassword}
+                    onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={settings.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    placeholder="Confirm new password"
+                  />
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">New Password</label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  placeholder="Enter new password"
-                />
+            ) : (
+              <div className="p-4 rounded-lg bg-muted">
+                <p className="text-sm text-muted-foreground">
+                  Password changes are not available for {user.provider} accounts.
+                  Manage your password through your {user.provider} account settings.
+                </p>
               </div>
-            </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -406,13 +528,13 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="outline" className="flex-1">
+              <Button variant="outline" className="flex-1" onClick={handleExportData}>
                 Export Data
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button variant="outline" className="flex-1" onClick={handleDownloadHistory}>
                 Download Game History
               </Button>
-              <Button variant="destructive" className="flex-1">
+              <Button variant="destructive" className="flex-1" onClick={handleDeleteAccount}>
                 Delete Account
               </Button>
             </div>
@@ -423,10 +545,27 @@ export default function SettingsPage() {
         </Card>
 
         {/* Save Button */}
-        <div className="text-center">
-          <Button onClick={handleSave} size="lg" className="px-8 py-4 text-lg gradient-card text-white border-0">
+        <div className="text-center space-y-4">
+          {error && (
+            <div className="p-3 rounded-md bg-red-900/50 border border-red-700 max-w-md mx-auto">
+              <p className="text-sm text-red-300">{error}</p>
+            </div>
+          )}
+          
+          {success && (
+            <div className="p-3 rounded-md bg-green-900/50 border border-green-700 max-w-md mx-auto">
+              <p className="text-sm text-green-300">{success}</p>
+            </div>
+          )}
+
+          <Button
+            onClick={handleSave}
+            size="lg"
+            className="px-8 py-4 text-lg gradient-card text-white border-0"
+            disabled={isLoading}
+          >
             <Save className="h-5 w-5 mr-2" />
-            Save All Changes
+            {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>

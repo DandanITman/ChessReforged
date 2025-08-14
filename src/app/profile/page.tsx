@@ -3,14 +3,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  User, 
-  MapPin, 
-  Calendar, 
-  Trophy, 
-  Target, 
-  Clock, 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  User,
+  MapPin,
+  Calendar,
+  Trophy,
+  Target,
+  Clock,
   TrendingUp,
   Edit,
   Crown,
@@ -19,22 +19,50 @@ import {
   Medal
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfileStore } from "@/lib/store/profile";
+import { getRatingClass } from "@/lib/elo/eloSystem";
 
 export default function ProfilePage() {
-  // Mock user data
-  const user = {
-    username: "ChessReforged",
-    displayName: "Chess Master",
-    bio: "Passionate chess player exploring new strategies and custom army compositions. Always looking for challenging opponents!",
-    location: "New York, USA",
-    joinDate: "January 2024",
-    rating: 1847,
-    rank: "Expert",
-    gamesPlayed: 342,
-    winRate: 68,
-    favoriteOpening: "Sicilian Defense",
-    playtime: "127 hours"
+  const { user, userProfile } = useAuth();
+  const achievements = useProfileStore((state) => state.achievements);
+
+  // Get initials for avatar
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
+
+  // Calculate stats from user profile
+  const achievedCount = achievements.filter(a => a.achieved).length;
+  const totalGames = userProfile?.stats.gamesPlayed || 0;
+  const wins = userProfile?.stats.wins || 0;
+  const losses = userProfile?.stats.losses || 0;
+  const draws = userProfile?.stats.draws || 0;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+  const currentRating = userProfile?.ratings.standardCasual || 400;
+  const ratingInfo = getRatingClass(currentRating);
+
+  // Format join date
+  const joinDate = userProfile?.createdAt
+    ? new Date(userProfile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : 'Recently';
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Please sign in</h2>
+          <p className="text-muted-foreground">You need to be signed in to view your profile.</p>
+        </div>
+      </div>
+    );
+  }
 
   const recentGames = [
     { id: 1, opponent: "KnightRider", result: "win", rating: "1823", time: "2 hours ago", opening: "Queen's Gambit" },
@@ -43,13 +71,6 @@ export default function ProfilePage() {
     { id: 4, opponent: "RookMaster", result: "draw", rating: "1834", time: "3 days ago", opening: "English Opening" },
   ];
 
-  const achievements = [
-    { id: 1, name: "First Victory", description: "Win your first game", icon: Trophy, earned: true },
-    { id: 2, name: "Speed Demon", description: "Win 10 blitz games", icon: Zap, earned: true },
-    { id: 3, name: "Army Builder", description: "Create 5 custom armies", icon: Crown, earned: true },
-    { id: 4, name: "Perfectionist", description: "Win a game without losing pieces", icon: Star, earned: false },
-    { id: 5, name: "Grand Master", description: "Reach 2000+ rating", icon: Medal, earned: false },
-  ];
 
   const getResultColor = (result: string) => {
     switch (result) {
@@ -67,35 +88,40 @@ export default function ProfilePage() {
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <Avatar className="size-24 ring-4 ring-primary/20">
+              {user.photoURL && (
+                <AvatarImage src={user.photoURL} alt={user.displayName || ""} />
+              )}
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl font-bold">
-                CR
+                {getInitials(user.displayName)}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold">{user.displayName}</h1>
-                  <Badge className="gradient-card text-white border-0">
-                    {user.rank}
+                  <h1 className="text-3xl font-bold">{user.displayName || 'Anonymous Player'}</h1>
+                  <Badge className={`${ratingInfo.color} border-0`}>
+                    {ratingInfo.title}
                   </Badge>
                 </div>
-                <p className="text-muted-foreground">@{user.username}</p>
-                <p className="text-foreground leading-relaxed">{user.bio}</p>
+                <p className="text-muted-foreground">{user.email}</p>
+                <p className="text-foreground leading-relaxed">
+                  {userProfile?.settings.theme === 'dark' ? '🌙' : '☀️'} Chess enthusiast exploring custom army strategies
+                </p>
               </div>
               
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {user.location}
+                  <User className="h-4 w-4" />
+                  {user.provider.charAt(0).toUpperCase() + user.provider.slice(1)} Account
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  Joined {user.joinDate}
+                  Joined {joinDate}
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {user.playtime} played
+                  Level {userProfile?.level || 1}
                 </div>
               </div>
             </div>
@@ -116,7 +142,7 @@ export default function ProfilePage() {
           <CardContent className="p-6 text-center">
             <div className="space-y-2">
               <Target className="h-8 w-8 mx-auto" />
-              <div className="text-2xl font-bold">{user.rating}</div>
+              <div className="text-2xl font-bold">{currentRating}</div>
               <div className="text-sm text-white/80">Current Rating</div>
             </div>
           </CardContent>
@@ -126,7 +152,7 @@ export default function ProfilePage() {
           <CardContent className="p-6 text-center">
             <div className="space-y-2">
               <TrendingUp className="h-8 w-8 mx-auto" />
-              <div className="text-2xl font-bold">{user.winRate}%</div>
+              <div className="text-2xl font-bold">{winRate}%</div>
               <div className="text-sm text-white/80">Win Rate</div>
             </div>
           </CardContent>
@@ -136,7 +162,7 @@ export default function ProfilePage() {
           <CardContent className="p-6 text-center">
             <div className="space-y-2">
               <Trophy className="h-8 w-8 mx-auto" />
-              <div className="text-2xl font-bold">{user.gamesPlayed}</div>
+              <div className="text-2xl font-bold">{totalGames}</div>
               <div className="text-sm text-white/80">Games Played</div>
             </div>
           </CardContent>
@@ -146,7 +172,7 @@ export default function ProfilePage() {
           <CardContent className="p-6 text-center">
             <div className="space-y-2">
               <Star className="h-8 w-8 mx-auto" />
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{achievedCount}</div>
               <div className="text-sm text-white/80">Achievements</div>
             </div>
           </CardContent>
@@ -199,18 +225,23 @@ export default function ProfilePage() {
             <CardDescription>Your progress and milestones</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {achievements.map((achievement) => (
+            {achievements.slice(0, 5).map((achievement) => (
               <div key={achievement.id} className={`flex items-center gap-3 p-3 rounded-lg border ${
-                achievement.earned ? 'bg-primary/5 border-primary/20' : 'opacity-50'
+                achievement.achieved ? 'bg-primary/5 border-primary/20' : 'opacity-50'
               }`}>
-                <achievement.icon className={`h-6 w-6 ${
-                  achievement.earned ? 'text-primary' : 'text-muted-foreground'
+                <Trophy className={`h-6 w-6 ${
+                  achievement.achieved ? 'text-primary' : 'text-muted-foreground'
                 }`} />
                 <div className="flex-1">
-                  <div className="font-medium">{achievement.name}</div>
+                  <div className="font-medium">{achievement.title}</div>
                   <div className="text-sm text-muted-foreground">{achievement.description}</div>
+                  {!achievement.achieved && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Progress: {achievement.progress}/{achievement.goal}
+                    </div>
+                  )}
                 </div>
-                {achievement.earned && (
+                {achievement.achieved && (
                   <Badge className="gradient-card text-white border-0">
                     Earned
                   </Badge>

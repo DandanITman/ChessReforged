@@ -6,11 +6,14 @@ import { auth } from '@/lib/firebase/config';
 import { AuthUser, UserProfile, getUserProfile, updateLastActive } from '@/lib/firebase/auth';
 import { useProfileStore, setCurrentUserRef } from '@/lib/store/profile';
 import { useEditorStore, setCurrentUserUidRef } from '@/lib/store/editor';
+import { PlayerCountService } from '@/lib/firebase/playerCount';
+import DisplayNamePrompt from '@/components/DisplayNamePrompt';
 
 interface AuthContextType {
   user: AuthUser | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  needsDisplayName: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsDisplayName, setNeedsDisplayName] = useState(false);
 
   // Convert Firebase User to AuthUser
   const convertFirebaseUser = (firebaseUser: User): AuthUser => {
@@ -78,6 +82,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign out function
   const signOut = async () => {
     try {
+      // Remove from online players before signing out
+      if (user) {
+        await PlayerCountService.removeUserStatus(user.uid);
+      }
       await auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
@@ -99,8 +107,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setCurrentUserRef({ uid: firebaseUser.uid });
         setCurrentUserUidRef(firebaseUser.uid);
         
+        // Update user's online status
+        await PlayerCountService.updateUserStatus(
+          firebaseUser.uid,
+          firebaseUser.displayName || 'Anonymous Player',
+          'online'
+        );
+        
         // Load user profile from Firestore
         await loadUserProfile(firebaseUser);
+        
+        // Check if user needs to set display name (only for OAuth providers, not email)
+        // Add a small delay to ensure profile updates have completed
+        setTimeout(() => {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const isOAuthProvider = authUser.provider !== 'email';
+            const needsName = isOAuthProvider && (!currentUser.displayName || currentUser.displayName.trim() === '');
+            setNeedsDisplayName(needsName);
+          }
+        }, 1000); // 1 second delay to allow updates to complete
         
         // Sync stores with Firebase
         try {
@@ -116,6 +142,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // User is signed out
         setUser(null);
         setUserProfile(null);
+        setNeedsDisplayName(false);
+        
+        // Remove from online players if user was signed in
+        if (user) {
+          await PlayerCountService.removeUserStatus(user.uid);
+        }
         
         // Clear user references
         setCurrentUserRef(null);
@@ -141,10 +173,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => clearInterval(interval);
   }, [user]);
 
+  const handleDisplayNameComplete = (displayName: string) => {
+    setNeedsDisplayName(false);
+    // Refresh the auth state to get updated display name
+    refreshProfile();
+  };
+
   const value: AuthContextType = {
     user,
     userProfile,
     loading,
+    needsDisplayName,
     signOut,
     refreshProfile
   };
@@ -152,6 +191,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {needsDisplayName && user && (
+        <DisplayNamePrompt
+          onComplete={handleDisplayNameComplete}
+          userEmail={user.email}
+        />
+      )}
     </AuthContext.Provider>
   );
 }

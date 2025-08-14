@@ -14,25 +14,28 @@ import {
   signInWithApple,
   signInWithDiscord
 } from "@/lib/firebase/auth";
+import { handleError, reportError, type AppError } from "@/lib/utils/errorHandler";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<AppError | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
       await signInWithEmail(email, password);
       router.push("/"); // Redirect to home page
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed");
+    } catch (err) {
+      const appError = handleError(err);
+      reportError(appError, 'email-login');
+      setError(appError);
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +43,7 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: "google" | "apple" | "discord") => {
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
       switch (provider) {
@@ -55,8 +58,10 @@ export default function LoginPage() {
           break;
       }
       router.push("/"); // Redirect to home page
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Social login failed");
+    } catch (err) {
+      const appError = handleError(err);
+      reportError(appError, `${provider}-login`);
+      setError(appError);
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +141,10 @@ export default function LoginPage() {
             {/* Error Display */}
             {error && (
               <div className="p-3 rounded-md bg-red-900/50 border border-red-700">
-                <p className="text-sm text-red-300">{error}</p>
+                <p className="text-sm text-red-300">{error.userMessage}</p>
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-red-400 mt-1">Debug: {error.internalCode}</p>
+                )}
               </div>
             )}
 
@@ -149,7 +157,10 @@ export default function LoginPage() {
                     type="email"
                     placeholder="Email address"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError(null);
+                    }}
                     className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-400"
                     required
                   />
@@ -163,7 +174,10 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError(null);
+                    }}
                     className="pl-10 pr-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-gray-400"
                     required
                   />

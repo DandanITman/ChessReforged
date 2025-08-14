@@ -171,7 +171,32 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
     // Award: player gets 200 on win, else 100 (loss or draw)
     const amount = winner ? (winner === s.playerColor ? 200 : 100) : 100;
     try {
-      useProfileStore.getState().addCredits(amount);
+      const profileStore = useProfileStore.getState();
+      profileStore.addCredits(amount);
+      
+      // Track game statistics
+      const moveCount = s.history.length;
+      const playerWon = winner === s.playerColor;
+      const isDraw = winner === null;
+      
+      // Update game stats
+      profileStore.updateGameStats({
+        won: playerWon,
+        lost: !playerWon && !isDraw,
+        draw: isDraw,
+        moveCount: moveCount,
+        wasCheckmate: s.chess.isCheckmate()
+      });
+      
+      // Track achievements if player won
+      if (playerWon) {
+        profileStore.trackGameVictory(moveCount);
+        
+        // Track checkmate achievement
+        if (s.chess.isCheckmate()) {
+          profileStore.updateAchievementProgress("first-checkmate");
+        }
+      }
     } catch {
       // ignore if profile store not available
     }

@@ -65,7 +65,11 @@ export interface UserProfile {
     losses: number;
     draws: number;
     winStreaks: number;
+    currentWinStreak: number;
+    bestWinStreak: number;
     lastPlayed?: Date;
+    averageGameLength?: number;
+    quickestWin?: number; // in moves
   };
   
   // Inventory
@@ -84,11 +88,14 @@ export interface UserProfile {
 
 // Create user profile in Firestore
 async function createUserProfile(user: User, provider: string): Promise<UserProfile> {
+  // Default profile picture using white pawn piece
+  const defaultPhotoURL = '/pieces/w-p.png';
+  
   const userProfile: UserProfile = {
     uid: user.uid,
     email: user.email || '',
     displayName: user.displayName || 'Anonymous Player',
-    photoURL: user.photoURL || undefined,
+    photoURL: user.photoURL || defaultPhotoURL,
     provider: provider as 'google' | 'apple' | 'discord' | 'email',
     
     // Starting profile data
@@ -111,6 +118,8 @@ async function createUserProfile(user: User, provider: string): Promise<UserProf
       losses: 0,
       draws: 0,
       winStreaks: 0,
+      currentWinStreak: 0,
+      bestWinStreak: 0,
     },
     
     // Default inventory (basic pieces)
@@ -166,17 +175,21 @@ export async function signUpWithEmail(email: string, password: string, displayNa
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     
-    // Update display name
-    await updateProfile(result.user, { displayName });
+    // Update display name and default photo
+    await updateProfile(result.user, {
+      displayName,
+      photoURL: '/pieces/w-p.png'
+    });
     
-    // Create user profile
-    await createUserProfile(result.user, 'email');
+    // Create user profile (get updated user object)
+    const updatedUser = auth.currentUser!;
+    await createUserProfile(updatedUser, 'email');
     
     return {
       uid: result.user.uid,
       email: result.user.email,
       displayName,
-      photoURL: result.user.photoURL,
+      photoURL: '/pieces/w-p.png',
       provider: 'email'
     };
   } catch (error) {
@@ -205,6 +218,13 @@ export async function signInWithGoogle(): Promise<AuthUser> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     
+    // If user doesn't have a photo, set default
+    if (!result.user.photoURL) {
+      await updateProfile(result.user, {
+        photoURL: '/pieces/w-p.png'
+      });
+    }
+    
     // Create or update user profile
     await createUserProfile(result.user, 'google');
     
@@ -212,7 +232,7 @@ export async function signInWithGoogle(): Promise<AuthUser> {
       uid: result.user.uid,
       email: result.user.email,
       displayName: result.user.displayName,
-      photoURL: result.user.photoURL,
+      photoURL: result.user.photoURL || '/pieces/w-p.png',
       provider: 'google'
     };
   } catch (error) {
@@ -224,6 +244,13 @@ export async function signInWithApple(): Promise<AuthUser> {
   try {
     const result = await signInWithPopup(auth, appleProvider);
     
+    // If user doesn't have a photo, set default
+    if (!result.user.photoURL) {
+      await updateProfile(result.user, {
+        photoURL: '/pieces/w-p.png'
+      });
+    }
+    
     // Create or update user profile
     await createUserProfile(result.user, 'apple');
     
@@ -231,7 +258,7 @@ export async function signInWithApple(): Promise<AuthUser> {
       uid: result.user.uid,
       email: result.user.email,
       displayName: result.user.displayName,
-      photoURL: result.user.photoURL,
+      photoURL: result.user.photoURL || '/pieces/w-p.png',
       provider: 'apple'
     };
   } catch (error) {
@@ -243,6 +270,13 @@ export async function signInWithDiscord(): Promise<AuthUser> {
   try {
     const result = await signInWithPopup(auth, discordProvider);
     
+    // If user doesn't have a photo, set default
+    if (!result.user.photoURL) {
+      await updateProfile(result.user, {
+        photoURL: '/pieces/w-p.png'
+      });
+    }
+    
     // Create or update user profile
     await createUserProfile(result.user, 'discord');
     
@@ -250,7 +284,7 @@ export async function signInWithDiscord(): Promise<AuthUser> {
       uid: result.user.uid,
       email: result.user.email,
       displayName: result.user.displayName,
-      photoURL: result.user.photoURL,
+      photoURL: result.user.photoURL || '/pieces/w-p.png',
       provider: 'discord'
     };
   } catch (error) {

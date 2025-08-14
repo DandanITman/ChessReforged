@@ -23,6 +23,7 @@ import {
 import { getRatingClass, getRatingPercentile } from "@/lib/elo/eloSystem";
 import { useMultiplayerGameStore } from "@/lib/store/multiplayerGame";
 import { useAuth } from "@/contexts/AuthContext";
+import { PlayerCountService } from "@/lib/firebase/playerCount";
 import type { GameType, TimeControl } from "@/lib/firebase/multiplayer";
 
 type GameMode = 'casual' | 'ranked' | 'friend';
@@ -30,7 +31,7 @@ type LocalGameType = 'standard' | 'classical';
 type LocalTimeControl = '1+0' | '3+0' | '3+2' | '5+0' | '10+0' | '15+10' | '30+0';
 
 export default function PlayOnlinePage() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const {
     isInMatchmaking,
     matchmakingType,
@@ -45,16 +46,39 @@ export default function PlayOnlinePage() {
   const [selectedMode, setSelectedMode] = useState<GameMode>('casual');
   const [selectedGameType, setSelectedGameType] = useState<LocalGameType>('standard');
   const [selectedTimeControl, setSelectedTimeControl] = useState<LocalTimeControl>('10+0');
+  const [playerCounts, setPlayerCounts] = useState({ online: 0, inGame: 0, lookingForGame: 0 });
 
-  // Mock user stats (would come from profile store)
-  const userStats = {
-    rating: 1247,
-    gamesPlayed: 156,
-    wins: 89,
-    losses: 52,
-    draws: 15,
-    winRate: 57
+  // Get real user stats from profile
+  const userStats = userProfile ? {
+    rating: userProfile.ratings.standardCasual,
+    gamesPlayed: userProfile.stats.gamesPlayed,
+    wins: userProfile.stats.wins,
+    losses: userProfile.stats.losses,
+    draws: userProfile.stats.draws,
+    winRate: userProfile.stats.gamesPlayed > 0 ? Math.round((userProfile.stats.wins / userProfile.stats.gamesPlayed) * 100) : 0
+  } : {
+    rating: 400,
+    gamesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    winRate: 0
   };
+
+  // Subscribe to real player counts
+  useEffect(() => {
+    const service = PlayerCountService.getInstance();
+    
+    const handleCountUpdate = (counts: { online: number; inGame: number; lookingForGame: number }) => {
+      setPlayerCounts(counts);
+    };
+
+    service.subscribeToPlayerCounts(handleCountUpdate);
+
+    return () => {
+      service.unsubscribeFromPlayerCounts();
+    };
+  }, []);
 
   const ratingInfo = getRatingClass(userStats.rating);
   const percentile = getRatingPercentile(userStats.rating);
@@ -470,17 +494,17 @@ export default function PlayOnlinePage() {
             </CardHeader>
             <CardContent>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">1,247</div>
+                <div className="text-2xl font-bold text-green-500">{playerCounts.online.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Players online</div>
               </div>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>In games</span>
-                  <span>892</span>
+                  <span>{playerCounts.inGame.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Looking for game</span>
-                  <span>355</span>
+                  <span>{playerCounts.lookingForGame.toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>

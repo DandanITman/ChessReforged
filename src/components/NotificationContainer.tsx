@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useNotificationStore, type Notification } from "@/lib/store/notifications";
 import { cn } from "@/lib/utils";
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from "lucide-react";
+import AchievementNotification from "@/components/AchievementNotification";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -79,19 +80,33 @@ function NotificationItem({ notification, onRemove }: NotificationItemProps) {
 
 export default function NotificationContainer() {
   const notifications = useNotificationStore((state) => state.notifications);
+  const achievementNotifications = useNotificationStore((state) => state.achievementNotifications);
   const removeNotification = useNotificationStore((state) => state.removeNotification);
-
-  if (notifications.length === 0) return null;
+  const dismissAchievementNotification = useNotificationStore((state) => state.dismissAchievementNotification);
 
   return (
-    <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm w-full">
-      {notifications.map((notification) => (
-        <NotificationItem
-          key={notification.id}
-          notification={notification}
-          onRemove={removeNotification}
+    <>
+      {/* Regular notifications */}
+      {notifications.length > 0 && (
+        <div className="fixed top-20 right-4 z-40 space-y-2 max-w-sm w-full">
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onRemove={removeNotification}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Achievement notifications */}
+      {achievementNotifications.map((achievementNotif) => (
+        <AchievementNotification
+          key={achievementNotif.id}
+          achievement={achievementNotif.achievement}
+          onClose={() => dismissAchievementNotification(achievementNotif.id)}
         />
       ))}
-    </div>
+    </>
   );
 }

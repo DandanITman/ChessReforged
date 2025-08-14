@@ -14,6 +14,7 @@ import {
   signInWithApple,
   signInWithDiscord
 } from "@/lib/firebase/auth";
+import { handleError, reportError, createValidationError, type AppError } from "@/lib/utils/errorHandler";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,24 +26,32 @@ export default function RegisterPage() {
     confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<AppError | null>(null);
   const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(null);
     
+    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError(createValidationError("Passwords do not match"));
       return;
     }
 
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError(createValidationError("Password must be at least 8 characters long"));
+      return;
+    }
+
+    if (!formData.username.trim()) {
+      setError(createValidationError("Username is required"));
       return;
     }
 
@@ -51,8 +60,10 @@ export default function RegisterPage() {
     try {
       await signUpWithEmail(formData.email, formData.password, formData.username);
       router.push("/"); // Redirect to home page
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Registration failed");
+    } catch (err) {
+      const appError = handleError(err);
+      reportError(appError, 'email-registration');
+      setError(appError);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +71,7 @@ export default function RegisterPage() {
 
   const handleSocialRegister = async (provider: "google" | "apple" | "discord") => {
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
       switch (provider) {
@@ -75,8 +86,10 @@ export default function RegisterPage() {
           break;
       }
       router.push("/"); // Redirect to home page
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Social registration failed");
+    } catch (err) {
+      const appError = handleError(err);
+      reportError(appError, `${provider}-registration`);
+      setError(appError);
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +169,10 @@ export default function RegisterPage() {
             {/* Error Display */}
             {error && (
               <div className="p-3 rounded-md bg-red-900/50 border border-red-700">
-                <p className="text-sm text-red-300">{error}</p>
+                <p className="text-sm text-red-300">{error.userMessage}</p>
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-red-400 mt-1">Debug: {error.internalCode}</p>
+                )}
               </div>
             )}
 

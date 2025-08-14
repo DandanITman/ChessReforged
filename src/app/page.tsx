@@ -1,17 +1,59 @@
+"use client";
+
+import React from "react";
 import { Sword, Bot, Users, Puzzle, ShoppingBag, Package, Eye, Crown, Zap, Star, Clock, Play } from "lucide-react";
 import { NavTile } from "@/components/NavTile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRequireAuth } from "@/contexts/AuthContext";
+import { useProfileStore } from "@/lib/store/profile";
+import { PlayerCountService } from "@/lib/firebase/playerCount";
 
 export default function Home() {
-  // Mock data for live games
+  const { user, loading } = useRequireAuth();
+  const achievements = useProfileStore((state) => state.achievements);
+  const [playerCounts, setPlayerCounts] = React.useState({ online: 0, inGame: 0, lookingForGame: 0 });
+
+  // Calculate achievement stats
+  const achievedCount = achievements.filter(a => a.achieved).length;
+  const totalAchievements = achievements.length;
+
+  // Subscribe to real player counts
+  React.useEffect(() => {
+    const service = PlayerCountService.getInstance();
+    
+    const handleCountUpdate = (counts: { online: number; inGame: number; lookingForGame: number }) => {
+      setPlayerCounts(counts);
+    };
+
+    service.subscribeToPlayerCounts(handleCountUpdate);
+
+    return () => {
+      service.unsubscribeFromPlayerCounts();
+    };
+  }, []);
+
+  // Mock data for live games (would be real in production)
   const liveGames = [
     { id: 1, white: "ChessMaster", black: "KnightRider", rating: "1850", timeLeft: "5:23", viewers: 42 },
     { id: 2, white: "QueenSlayer", black: "PawnStorm", rating: "2100", timeLeft: "12:45", viewers: 28 },
     { id: 3, white: "RookiePlayer", black: "BishopBoss", rating: "1650", timeLeft: "8:12", viewers: 15 },
   ];
 
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If no user, useRequireAuth will redirect to login
+  if (!user) {
+    return null;
+  }
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -41,7 +83,7 @@ export default function Home() {
           description="Challenge players from around the world"
           icon={Users}
           gradient="gradient-card-emerald"
-          badge="1,247 Online"
+          badge={`${playerCounts.online.toLocaleString()} Online`}
           badgeIcon={Crown}
         />
         <NavTile
@@ -75,7 +117,7 @@ export default function Home() {
           description="Track your progress and earn rewards"
           icon={Puzzle}
           gradient="gradient-card-rose"
-          badge="12/50 Unlocked"
+          badge={`${achievedCount}/${totalAchievements} Unlocked`}
         />
       </div>
 
