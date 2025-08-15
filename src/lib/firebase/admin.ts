@@ -145,29 +145,47 @@ export class AdminService {
     try {
       const userRef = doc(db, 'users', userId);
 
-      // Unlock 1 of each piece type for army builder
-      const allPiecesInventory = {
-        // Standard pieces (keep existing amounts if higher)
-        'inventory.p': 8, // Pawns
-        'inventory.n': 2, // Knights
-        'inventory.b': 2, // Bishops
-        'inventory.r': 2, // Rooks
-        'inventory.q': 1, // Queen
-        'inventory.k': 1, // King
-        // Custom pieces (unlock 1 of each)
-        'inventory.l': 1, // Lion
-        'inventory.s': 1, // Soldier
-        'inventory.d': 1, // Dragon
-        'inventory.c': 1, // Catapult
-        'inventory.e': 1, // Elephant
-        'inventory.w': 1, // Wizard
-        'inventory.a': 1, // Archer
-        'inventory.h': 1, // Ship
-        'inventory.m': 1, // Knight Commander
-        'inventory.t': 1, // Tower Golem
+      // Get current user data to check existing inventory
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+      const currentInventory = userData?.inventory || {};
+
+      // Ensure user has at least the minimum amount of each piece
+      const minPieceCounts = {
+        // Standard pieces (ensure minimum amounts)
+        p: 8, // Pawns
+        n: 2, // Knights
+        b: 2, // Bishops
+        r: 2, // Rooks
+        q: 1, // Queen
+        k: 1, // King
+        // Custom pieces (ensure at least 1 of each)
+        l: 1, // Lion
+        s: 1, // Soldier
+        d: 1, // Dragon
+        c: 1, // Catapult
+        e: 1, // Elephant
+        w: 1, // Wizard
+        a: 1, // Archer
+        h: 1, // Ship
+        m: 1, // Knight Commander
+        t: 1, // Tower Golem
       };
 
-      await updateDoc(userRef, allPiecesInventory);
+      // Build update object with only pieces that need to be increased
+      const inventoryUpdates: Record<string, number> = {};
+
+      for (const [piece, minCount] of Object.entries(minPieceCounts)) {
+        const currentCount = currentInventory[piece] || 0;
+        if (currentCount < minCount) {
+          inventoryUpdates[`inventory.${piece}`] = minCount;
+        }
+      }
+
+      // Only update if there are pieces to unlock
+      if (Object.keys(inventoryUpdates).length > 0) {
+        await updateDoc(userRef, inventoryUpdates);
+      }
     } catch (error) {
       console.error('Error unlocking all pieces:', error);
       throw error;

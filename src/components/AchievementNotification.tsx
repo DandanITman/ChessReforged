@@ -23,12 +23,12 @@ export default function AchievementNotification({
   const [isHovered, setIsHovered] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  // Trigger celebration effects on mount
+  // Trigger celebration effects on mount ONLY
   useEffect(() => {
     // Slide in animation
     setIsVisible(true);
-    
-    // Achievement sound effect
+
+    // Achievement sound effect - only play once on mount
     try {
       SFX.achievement(); // Using dedicated achievement sound
     } catch (error) {
@@ -39,7 +39,7 @@ export default function AchievementNotification({
     const celebrateAchievement = () => {
       // Multiple confetti bursts for extra celebration
       const colors = ['#FFD700', '#FFA500', '#FF6B35', '#9B59B6', '#3498DB', '#2ECC71'];
-      
+
       // First burst from the achievement notification area
       confetti({
         particleCount: 100,
@@ -79,12 +79,8 @@ export default function AchievementNotification({
 
     celebrateAchievement();
 
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [achievement, timeoutId]);
+    // No cleanup needed for this effect since it only runs once
+  }, [achievement.id]); // Only depend on achievement.id to prevent re-runs
 
   // Auto-close timer management
   useEffect(() => {
