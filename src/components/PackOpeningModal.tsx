@@ -10,6 +10,7 @@ import { pieceSprite } from "@/lib/chess/pieceSprites";
 import { Package, Gem, Star, X, Sparkles, Coins } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useProfileStore } from "@/lib/store/profile";
+import { SFX } from "@/lib/sound/sfx";
 
 interface PackOpeningModalProps {
   isOpen: boolean;
@@ -87,6 +88,14 @@ export default function PackOpeningModal({
 
   useEffect(() => {
     if (isOpen && packReward) {
+      // Play pack opening sound
+      try {
+        SFX.packOpen();
+      } catch (error) {
+        console.log('Pack opening sound effect not available:', error);
+      }
+
+      // Trigger visual effects
       triggerEffects(packReward.pieces);
     }
   }, [isOpen, packReward]);
