@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
   Crown,
@@ -18,12 +19,17 @@ import {
   Star,
   Timer,
   Globe,
-  Search
+  Search,
+  History,
+  CalendarDays
 } from "lucide-react";
 import { getRatingClass, getRatingPercentile } from "@/lib/elo/eloSystem";
 import { useMultiplayerGameStore } from "@/lib/store/multiplayerGame";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlayerCountService } from "@/lib/firebase/playerCount";
+import { Leaderboard } from "@/components/Leaderboard";
+import { GameHistory } from "@/components/GameHistory";
+import { TournamentSchedule } from "@/components/TournamentSchedule";
 import type { GameType, TimeControl } from "@/lib/firebase/multiplayer";
 
 type GameMode = 'casual' | 'ranked' | 'friend';
@@ -463,24 +469,29 @@ export default function PlayOnlinePage() {
             </Card>
           )}
 
-          {/* Quick Actions */}
+          {/* Navigation to Detailed Views */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>Explore More</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-between">
-                View Leaderboard
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="w-full justify-between">
-                Game History
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="w-full justify-between">
-                Tournament Schedule
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <p className="text-sm text-muted-foreground mb-4">
+                Check out the tabs below for leaderboards, your game history, and upcoming tournaments.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <Badge variant="outline" className="justify-center py-2">
+                  <Trophy className="h-4 w-4 mr-1" />
+                  Rankings
+                </Badge>
+                <Badge variant="outline" className="justify-center py-2">
+                  <History className="h-4 w-4 mr-1" />
+                  History
+                </Badge>
+                <Badge variant="outline" className="justify-center py-2">
+                  <CalendarDays className="h-4 w-4 mr-1" />
+                  Events
+                </Badge>
+              </div>
             </CardContent>
           </Card>
 
@@ -510,6 +521,38 @@ export default function PlayOnlinePage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Leaderboard, Game History, and Tournament Tabs */}
+      <div className="mt-12">
+        <Tabs defaultValue="leaderboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="leaderboard" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Leaderboard
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Game History
+            </TabsTrigger>
+            <TabsTrigger value="tournaments" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Tournaments
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="leaderboard">
+            <Leaderboard />
+          </TabsContent>
+          
+          <TabsContent value="history">
+            <GameHistory />
+          </TabsContent>
+          
+          <TabsContent value="tournaments">
+            <TournamentSchedule />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

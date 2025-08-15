@@ -6,11 +6,17 @@
 // - drop.mp3
 // - capture.mp3
 // - win.mp3
+// - loss.mp3
+// - draw.mp3
 // - select.mp3
 // - illegal.mp3
 // - check.mp3
 // - preview.mp3
 // - achievement.mp3
+// - levelup.mp3
+// - pack_open.mp3
+// - button_click.mp3
+// - notification.mp3
 
 const basePath = "/sounds"; // default directory for Freesound placeholders
 
@@ -52,11 +58,17 @@ const pools = {
   drop: makePool(`${basePath}/drop`, 4),
   capture: makePool(`${basePath}/capture`, 4),
   win: makePool(`${basePath}/win`, 2),
+  loss: makePool(`${basePath}/loss`, 2),
+  draw: makePool(`${basePath}/draw`, 2),
   select: makePool(`${basePath}/select`, 3),
   illegal: makePool(`${basePath}/illegal`, 2),
   check: makePool(`${basePath}/check`, 2),
   preview: makePool(`${basePath}/preview`, 2),
   achievement: makePool(`${basePath}/achievement`, 2),
+  levelup: makePool(`${basePath}/levelup`, 2),
+  packOpen: makePool(`${basePath}/pack_open`, 2),
+  buttonClick: makePool(`${basePath}/button_click`, 3),
+  notification: makePool(`${basePath}/notification`, 2),
 };
 
 import { useSettingsStore } from "@/lib/store/settings";
@@ -77,6 +89,12 @@ export const SFX = {
   win(volume = 0.9) {
     if (!this.enabled()) return; pools.win.play(volume);
   },
+  loss(volume = 0.8) {
+    if (!this.enabled()) return; pools.loss.play(volume);
+  },
+  draw(volume = 0.7) {
+    if (!this.enabled()) return; pools.draw.play(volume);
+  },
   select(volume = 0.5) {
     if (!this.enabled()) return; pools.select.play(volume);
   },
@@ -91,6 +109,18 @@ export const SFX = {
   },
   achievement(volume = 0.8) {
     if (!this.enabled()) return; pools.achievement.play(volume, 0, 300);
+  },
+  levelup(volume = 0.9) {
+    if (!this.enabled()) return; pools.levelup.play(volume, 0, 400);
+  },
+  packOpen(volume = 0.8) {
+    if (!this.enabled()) return; pools.packOpen.play(volume, 0, 200);
+  },
+  buttonClick(volume = 0.4) {
+    if (!this.enabled()) return; pools.buttonClick.play(volume, 0, 50);
+  },
+  notification(volume = 0.6) {
+    if (!this.enabled()) return; pools.notification.play(volume, 0, 150);
   },
 };
 

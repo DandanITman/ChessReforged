@@ -83,69 +83,54 @@ function BotMatchContent() {
 
   const boardArea = useMemo(() => {
     if (previewFen) {
-      return (
-        <div className="space-y-2">
-          <ReadOnlyBoard fen={previewFen} />
-          <div>
-            <button className="px-3 py-1 rounded text-sm font-medium bg-blue-600 text-white" onClick={() => setPreviewFen(null)}>Return to live</button>
-          </div>
-        </div>
-      );
+      return <ReadOnlyBoard fen={previewFen} />;
     }
-    return (
-      <div className="space-y-3">
-        <BotChessBoard showControls={false} />
-        <div className="flex gap-2">
-          <button className="px-3 py-1 rounded text-sm font-medium bg-green-600 text-white" onClick={() => {
-            if (as === 'w' || as === 'b') {
-              const playerColor = as as Color;
-              let playerDeck = null;
-              let opponentDeck = null;
+    return <BotChessBoard showControls={false} />;
+  }, [previewFen]);
 
-              // Find player deck
-              if (deckParam) {
-                playerDeck = decks.find(d => d.id === deckParam && d.color === playerColor);
-              }
+  const handleNewGame = () => {
+    if (as === 'w' || as === 'b') {
+      const playerColor = as as Color;
+      let playerDeck = null;
+      let opponentDeck = null;
 
-              if (!playerDeck) {
-                playerDeck = decks.find(d => d.color === playerColor && d.isMain);
-              }
+      // Find player deck
+      if (deckParam) {
+        playerDeck = decks.find(d => d.id === deckParam && d.color === playerColor);
+      }
 
-              // Find opponent deck
-              const opponentColor = playerColor === 'w' ? 'b' : 'w';
-              
-              if (opponentDeckParam) {
-                opponentDeck = decks.find(d => d.id === opponentDeckParam && d.color === opponentColor);
-              }
-              
-              if (!opponentDeck) {
-                opponentDeck = decks.find(d => d.color === opponentColor && d.isMain);
-              }
+      if (!playerDeck) {
+        playerDeck = decks.find(d => d.color === playerColor && d.isMain);
+      }
 
-              // If no main deck found for opponent, use the first available deck of that color
-              if (!opponentDeck) {
-                opponentDeck = decks.find(d => d.color === opponentColor);
-              }
+      // Find opponent deck
+      const opponentColor = playerColor === 'w' ? 'b' : 'w';
+      
+      if (opponentDeckParam) {
+        opponentDeck = decks.find(d => d.id === opponentDeckParam && d.color === opponentColor);
+      }
+      
+      if (!opponentDeck) {
+        opponentDeck = decks.find(d => d.color === opponentColor && d.isMain);
+      }
 
-              let customFen: string | undefined;
-              let customMapping;
-              if (playerDeck || opponentDeck) {
-                const whiteDeck = playerColor === 'w' ? playerDeck : opponentDeck;
-                const blackDeck = playerColor === 'w' ? opponentDeck : playerDeck;
-                customFen = decksToFen(whiteDeck || null, blackDeck || null);
-                customMapping = generateCustomPieceMapping(whiteDeck || null, blackDeck || null);
-              }
+      // If no main deck found for opponent, use the first available deck of that color
+      if (!opponentDeck) {
+        opponentDeck = decks.find(d => d.color === opponentColor);
+      }
 
-              reset(playerColor, customFen, customMapping);
-            }
-          }}>New Game</button>
-          <button className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white" onClick={() => resign('w')}>Resign (White)</button>
-          <button className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white" onClick={() => resign('b')}>Resign (Black)</button>
-        </div>
-        <div className="text-sm text-zinc-600 dark:text-zinc-300">{status}</div>
-      </div>
-    );
-  }, [previewFen, reset, resign, status, as]);
+      let customFen: string | undefined;
+      let customMapping;
+      if (playerDeck || opponentDeck) {
+        const whiteDeck = playerColor === 'w' ? playerDeck : opponentDeck;
+        const blackDeck = playerColor === 'w' ? opponentDeck : playerDeck;
+        customFen = decksToFen(whiteDeck || null, blackDeck || null);
+        customMapping = generateCustomPieceMapping(whiteDeck || null, blackDeck || null);
+      }
+
+      reset(playerColor, customFen, customMapping);
+    }
+  };
 
   const sfxEnabled = useSettingsStore((s) => s.sfxEnabled);
   const setSfxEnabled = useSettingsStore((s) => s.setSfxEnabled);
@@ -154,16 +139,69 @@ function BotMatchContent() {
     <section className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
       <div>
         {boardArea}
-        <div className="mt-2 flex items-center gap-2 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={sfxEnabled} onChange={(e) => setSfxEnabled(e.target.checked)} />
-            Enable sound effects
-          </label>
-        </div>
       </div>
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Move history</h2>
-        <MoveHistoryPanel onSelect={(entry) => { if (entry) SFX.preview(); setPreviewFen(entry?.fenAfter ?? null); }} />
+        {/* Game Status */}
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <div className="text-sm font-medium text-muted-foreground mb-1">Game Status</div>
+          <div className="text-sm">{status}</div>
+        </div>
+
+        {/* Game Controls */}
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-muted-foreground">Game Controls</div>
+          
+          {previewFen ? (
+            <button
+              className="w-full px-3 py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              onClick={() => setPreviewFen(null)}
+            >
+              Return to Live Game
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <button
+                className="w-full px-3 py-2 rounded text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
+                onClick={handleNewGame}
+              >
+                New Game
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  className="px-3 py-2 rounded text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors"
+                  onClick={() => resign('w')}
+                >
+                  Resign (White)
+                </button>
+                <button
+                  className="px-3 py-2 rounded text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors"
+                  onClick={() => resign('b')}
+                >
+                  Resign (Black)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sound Effects Toggle */}
+          <div className="pt-2 border-t">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={sfxEnabled}
+                onChange={(e) => setSfxEnabled(e.target.checked)}
+                className="rounded"
+              />
+              Enable sound effects
+            </label>
+          </div>
+        </div>
+
+        {/* Move History */}
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-muted-foreground">Move History</div>
+          <MoveHistoryPanel onSelect={(entry) => { if (entry) SFX.preview(); setPreviewFen(entry?.fenAfter ?? null); }} />
+        </div>
       </div>
     </section>
   );

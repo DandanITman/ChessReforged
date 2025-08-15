@@ -29,7 +29,7 @@ export default function LevelUpAnimation({
 
       // Play level up sound
       try {
-        SFX.win(); // Using win sound for level up
+        SFX.levelup(); // Using dedicated level up sound
       } catch (error) {
         console.log('Level up sound effect not available:', error);
       }

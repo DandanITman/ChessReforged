@@ -147,11 +147,13 @@ export const useMultiplayerGameStore = create<MultiplayerGameState>((set, get) =
     let outcome: 'win' | 'loss' | 'draw';
     if (gameData.result.reason === 'draw') {
       outcome = 'draw';
+      SFX.draw();
     } else if (gameData.result.winner === playerColor) {
       outcome = 'win';
       SFX.win();
     } else {
       outcome = 'loss';
+      SFX.loss();
     }
 
     // Update game statistics

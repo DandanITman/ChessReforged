@@ -46,6 +46,17 @@ export interface UserProfile {
   provider: 'google' | 'apple' | 'discord' | 'email';
   
   // Profile Data
+  profile: {
+    level: number;
+  };
+  
+  // Currency
+  currency: {
+    coins: number;
+    orbs: number;
+  };
+  
+  // Legacy fields for backward compatibility
   level: number;
   credits: number;
   orbs: number;
@@ -70,6 +81,7 @@ export interface UserProfile {
     lastPlayed?: Date;
     averageGameLength?: number;
     quickestWin?: number; // in moves
+    totalExperience: number;
   };
   
   // Inventory
@@ -98,7 +110,18 @@ async function createUserProfile(user: User, provider: string): Promise<UserProf
     photoURL: user.photoURL || defaultPhotoURL,
     provider: provider as 'google' | 'apple' | 'discord' | 'email',
     
-    // Starting profile data
+    // Profile data
+    profile: {
+      level: 1,
+    },
+    
+    // Currency
+    currency: {
+      coins: 1000,
+      orbs: 100,
+    },
+    
+    // Legacy fields for backward compatibility
     level: 1,
     credits: 1000,
     orbs: 100,
@@ -120,6 +143,7 @@ async function createUserProfile(user: User, provider: string): Promise<UserProf
       winStreaks: 0,
       currentWinStreak: 0,
       bestWinStreak: 0,
+      totalExperience: 0,
     },
     
     // Default inventory (basic pieces)

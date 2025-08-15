@@ -170,14 +170,25 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
 
     // Award: player gets 200 on win, else 100 (loss or draw)
     const amount = winner ? (winner === s.playerColor ? 200 : 100) : 100;
+
+    // Play appropriate sound effect based on outcome
+    const playerWon = winner === s.playerColor;
+    const isDraw = winner === null;
+
+    if (isDraw) {
+      SFX.draw();
+    } else if (playerWon) {
+      SFX.win();
+    } else {
+      SFX.loss();
+    }
+
     try {
       const profileStore = useProfileStore.getState();
       profileStore.addCredits(amount);
-      
+
       // Track game statistics
       const moveCount = s.history.length;
-      const playerWon = winner === s.playerColor;
-      const isDraw = winner === null;
       
       // Update game stats
       profileStore.updateGameStats({
@@ -347,9 +358,7 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
         });
 
         // SFX for special states after human move
-        if (state.chess.isCheckmate()) {
-          SFX.win();
-        } else if (state.chess.isCheck()) {
+        if (state.chess.isCheck()) {
           SFX.check();
         }
         // Reward outcome if game has ended
@@ -504,9 +513,7 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
           });
 
           // SFX for special states
-          if (state.chess.isCheckmate()) {
-            SFX.win();
-          } else if (state.chess.isCheck()) {
+          if (state.chess.isCheck()) {
             SFX.check();
           }
           // Reward outcome if game has ended
