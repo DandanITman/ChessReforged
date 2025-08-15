@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import LevelUpAnimation from "@/components/LevelUpAnimation";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -155,10 +156,10 @@ export default function TopBar() {
 
           {/* Level Display */}
           {userProfile && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary">
-              <span className="text-xs font-medium">Level</span>
-              <span className="text-sm font-bold">{userProfile.level}</span>
-            </div>
+            <LevelUpAnimation
+              level={userProfile.level}
+              className="hidden sm:flex relative"
+            />
           )}
 
           <DropdownMenu>
@@ -174,9 +175,11 @@ export default function TopBar() {
                 </Avatar>
                 {/* Level badge for mobile */}
                 {userProfile && (
-                  <div className="absolute -top-1 -right-1 sm:hidden bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {userProfile.level}
-                  </div>
+                  <LevelUpAnimation
+                    level={userProfile.level}
+                    className="absolute -top-1 -right-1 sm:hidden"
+                    isMobile={true}
+                  />
                 )}
               </Button>
             </DropdownMenuTrigger>
