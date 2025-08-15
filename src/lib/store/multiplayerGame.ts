@@ -75,10 +75,11 @@ export const useMultiplayerGameStore = create<MultiplayerGameState>((set, get) =
   // Helper to get current user info
   const getCurrentUser = (): { uid: string; displayName: string; photoURL?: string; rating: number } | null => {
     // This would be populated from auth context
-    // For now, return placeholder
+    // For now, return placeholder with default photoURL
     return {
       uid: 'current-user-uid',
       displayName: 'Player',
+      photoURL: '/pieces/w-p.png', // Default photo URL instead of undefined
       rating: 1200
     };
   };

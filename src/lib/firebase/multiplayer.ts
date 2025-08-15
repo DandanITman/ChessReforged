@@ -20,6 +20,17 @@ import { db } from './config';
 import type { Square, Color, PieceSymbol } from 'chess.js';
 import type { ExtendedPieceSymbol } from '@/lib/chess/placement';
 
+// Helper function to remove undefined values from objects before sending to Firebase
+function cleanForFirestore<T extends Record<string, any>>(obj: T): T {
+  const cleaned = {} as T;
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key as keyof T] = value;
+    }
+  }
+  return cleaned;
+}
+
 // Game types and interfaces
 export type GameType = 'standardCasual' | 'standardRanked' | 'classicalCasual' | 'classicalRanked';
 export type GameStatus = 'waiting' | 'starting' | 'active' | 'finished' | 'abandoned';
@@ -128,7 +139,7 @@ export class MultiplayerGameManager {
       type: gameType,
       status: 'waiting',
       timeControl,
-      players: [{ ...creator, isReady: false, connected: true, lastSeen: serverTimestamp() }],
+      players: [{ ...cleanForFirestore(creator), isReady: false, connected: true, lastSeen: serverTimestamp() }],
       spectators: [],
       fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // Standard starting position
       moves: [],
@@ -149,7 +160,7 @@ export class MultiplayerGameManager {
       };
     }
 
-    await setDoc(doc(db, 'games', gameId), game);
+    await setDoc(doc(db, 'games', gameId), cleanForFirestore(game));
     return gameId;
   }
 
@@ -175,7 +186,7 @@ export class MultiplayerGameManager {
     // Assign opposite color to the second player
     const assignedColor: Color = gameData.players[0].color === 'w' ? 'b' : 'w';
     const newPlayer: GamePlayer = {
-      ...player,
+      ...cleanForFirestore(player),
       color: assignedColor,
       isReady: false,
       connected: true,
@@ -400,11 +411,13 @@ export class MatchmakingManager {
   // Add player to matchmaking queue
   async joinMatchmaking(entry: Omit<MatchmakingEntry, 'createdAt'>): Promise<void> {
     const matchmakingRef = doc(db, 'matchmaking', entry.uid);
-    
-    await setDoc(matchmakingRef, {
+
+    const cleanedEntry = cleanForFirestore({
       ...entry,
       createdAt: serverTimestamp()
     });
+
+    await setDoc(matchmakingRef, cleanedEntry);
   }
 
   // Remove player from matchmaking queue
