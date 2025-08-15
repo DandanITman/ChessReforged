@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Chess, type Square, type Color, type PieceSymbol, type Move } from "chess.js";
-import { serverTimestamp, Timestamp } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 import {
   MultiplayerGame,
   GamePlayer,
@@ -205,7 +205,7 @@ export const useMultiplayerGameStore = create<MultiplayerGameState>((set, get) =
           rating: currentUser.rating,
           isReady: false,
           connected: true,
-          lastSeen: serverTimestamp() as Timestamp,
+          lastSeen: serverTimestamp(),
           deckId
         };
 
@@ -244,7 +244,7 @@ export const useMultiplayerGameStore = create<MultiplayerGameState>((set, get) =
           rating: currentUser.rating,
           isReady: false,
           connected: true,
-          lastSeen: serverTimestamp() as Timestamp
+          lastSeen: serverTimestamp()
         };
 
         await multiplayerManager.joinGame(gameId, player);

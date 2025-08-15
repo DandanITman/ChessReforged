@@ -1,19 +1,20 @@
-import { 
-  doc, 
-  collection, 
-  setDoc, 
-  getDoc, 
-  updateDoc, 
-  deleteDoc, 
-  onSnapshot, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
+import {
+  doc,
+  collection,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  Timestamp
+  Timestamp,
+  FieldValue
 } from 'firebase/firestore';
 import { db } from './config';
 import type { Square, Color, PieceSymbol } from 'chess.js';
@@ -32,7 +33,7 @@ export interface GameMove {
   promotion?: PieceSymbol;
   san: string;
   fen: string;
-  timestamp: Timestamp;
+  timestamp: Timestamp | FieldValue;
   moveNumber: number;
   timeRemaining?: {
     white: number;
@@ -48,7 +49,7 @@ export interface GamePlayer {
   rating: number;
   isReady: boolean;
   connected: boolean;
-  lastSeen: Timestamp;
+  lastSeen: Timestamp | FieldValue;
   deckId?: string; // For custom army games
 }
 
@@ -72,7 +73,7 @@ export interface MultiplayerGame {
     white: number; // milliseconds
     black: number; // milliseconds
   };
-  lastMoveTime?: Timestamp;
+  lastMoveTime?: Timestamp | FieldValue;
   
   // Game outcome
   result?: {
@@ -90,9 +91,9 @@ export interface MultiplayerGame {
   };
   
   // Metadata
-  createdAt: Timestamp;
-  startedAt?: Timestamp;
-  finishedAt?: Timestamp;
+  createdAt: Timestamp | FieldValue;
+  startedAt?: Timestamp | FieldValue;
+  finishedAt?: Timestamp | FieldValue;
   createdBy: string;
 }
 
@@ -104,7 +105,7 @@ export interface MatchmakingEntry {
   gameType: GameType;
   timeControl: TimeControl;
   deckId?: string; // For custom army preferences
-  createdAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
   minRating?: number;
   maxRating?: number;
 }
@@ -127,13 +128,13 @@ export class MultiplayerGameManager {
       type: gameType,
       status: 'waiting',
       timeControl,
-      players: [{ ...creator, isReady: false, connected: true, lastSeen: serverTimestamp() as Timestamp }],
+      players: [{ ...creator, isReady: false, connected: true, lastSeen: serverTimestamp() }],
       spectators: [],
       fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // Standard starting position
       moves: [],
       currentTurn: 'w',
       timeRemaining: this.getTimeControlMilliseconds(timeControl),
-      createdAt: serverTimestamp() as Timestamp,
+      createdAt: serverTimestamp(),
       createdBy: creator.uid
     };
 
@@ -178,7 +179,7 @@ export class MultiplayerGameManager {
       color: assignedColor,
       isReady: false,
       connected: true,
-      lastSeen: serverTimestamp() as Timestamp
+      lastSeen: serverTimestamp()
     };
 
     await updateDoc(gameRef, {
@@ -217,8 +218,8 @@ export class MultiplayerGameManager {
     // If both players are ready, start the game
     if (updatedPlayers.every(p => p.isReady)) {
       updates.status = 'active';
-      updates.startedAt = serverTimestamp() as Timestamp;
-      updates.lastMoveTime = serverTimestamp() as Timestamp;
+      updates.startedAt = serverTimestamp();
+      updates.lastMoveTime = serverTimestamp();
 
       // Set up custom armies if needed
       if (gameData.customSetup) {
@@ -267,7 +268,7 @@ export class MultiplayerGameManager {
       throw new Error('Not your turn');
     }
 
-    const now = serverTimestamp() as Timestamp;
+    const now = serverTimestamp();
     const moveNumber = Math.floor(gameData.moves.length / 2) + 1;
     
     const gameMove: GameMove = {
@@ -278,7 +279,7 @@ export class MultiplayerGameManager {
 
     // Calculate time remaining if not unlimited
     const updatedTimeRemaining = { ...gameData.timeRemaining };
-    if (gameData.timeControl !== 'unlimited' && gameData.lastMoveTime) {
+    if (gameData.timeControl !== 'unlimited' && gameData.lastMoveTime && 'toMillis' in gameData.lastMoveTime) {
       const timeElapsed = Date.now() - gameData.lastMoveTime.toMillis();
       const currentPlayerColor = gameData.currentTurn === 'w' ? 'white' : 'black';
       updatedTimeRemaining[currentPlayerColor] = Math.max(0,
@@ -367,7 +368,7 @@ export class MultiplayerGameManager {
     updatedPlayers[playerIndex] = {
       ...updatedPlayers[playerIndex],
       connected,
-      lastSeen: serverTimestamp() as Timestamp
+      lastSeen: serverTimestamp()
     };
 
     await updateDoc(gameRef, {
