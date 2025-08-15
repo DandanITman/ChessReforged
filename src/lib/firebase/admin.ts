@@ -55,15 +55,15 @@ export class AdminService {
     }
   }
 
-  async addCoins(userId: string, amount: number): Promise<void> {
+  async addCredits(userId: string, amount: number): Promise<void> {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        'currency.coins': increment(amount),
+        'currency.credits': increment(amount),
         credits: increment(amount) // Legacy field
       });
     } catch (error) {
-      console.error('Error adding coins:', error);
+      console.error('Error adding credits:', error);
       throw error;
     }
   }
@@ -137,6 +137,39 @@ export class AdminService {
       });
     } catch (error) {
       console.error('Error unlocking cosmetics:', error);
+      throw error;
+    }
+  }
+
+  async unlockAllPieces(userId: string): Promise<void> {
+    try {
+      const userRef = doc(db, 'users', userId);
+
+      // Unlock 1 of each piece type for army builder
+      const allPiecesInventory = {
+        // Standard pieces (keep existing amounts if higher)
+        'inventory.p': 8, // Pawns
+        'inventory.n': 2, // Knights
+        'inventory.b': 2, // Bishops
+        'inventory.r': 2, // Rooks
+        'inventory.q': 1, // Queen
+        'inventory.k': 1, // King
+        // Custom pieces (unlock 1 of each)
+        'inventory.l': 1, // Lion
+        'inventory.s': 1, // Soldier
+        'inventory.d': 1, // Dragon
+        'inventory.c': 1, // Catapult
+        'inventory.e': 1, // Elephant
+        'inventory.w': 1, // Wizard
+        'inventory.a': 1, // Archer
+        'inventory.h': 1, // Ship
+        'inventory.m': 1, // Knight Commander
+        'inventory.t': 1, // Tower Golem
+      };
+
+      await updateDoc(userRef, allPiecesInventory);
+    } catch (error) {
+      console.error('Error unlocking all pieces:', error);
       throw error;
     }
   }

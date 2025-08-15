@@ -30,7 +30,8 @@ import {
   TrendingUp,
   Award,
   Plus,
-  Minus
+  Minus,
+  Package
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile, updatePassword } from "firebase/auth";
@@ -703,11 +704,11 @@ export default function SettingsPage() {
                         if (!user?.uid) return;
                         setAdminLoading(true);
                         try {
-                          await adminService.addCoins(user.uid, 1000);
+                          await adminService.addCredits(user.uid, 1000);
                           await refreshProfile();
-                          setSuccess("Added 1000 coins!");
+                          setSuccess("Added 1000 credits!");
                         } catch (error) {
-                          setError("Failed to add coins");
+                          setError("Failed to add credits");
                         } finally {
                           setAdminLoading(false);
                         }
@@ -716,7 +717,7 @@ export default function SettingsPage() {
                       className="w-full text-yellow-600 border-yellow-600 hover:bg-yellow-50"
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      +1000 Coins
+                      +1000 Credits
                     </Button>
                     <Button
                       size="sm"
@@ -750,7 +751,7 @@ export default function SettingsPage() {
                   <Award className="h-4 w-4" />
                   Quick Actions
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button
                     size="sm"
                     variant="outline"
@@ -772,6 +773,28 @@ export default function SettingsPage() {
                   >
                     <Award className="h-4 w-4 mr-1" />
                     Unlock All Cosmetics
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!user?.uid) return;
+                      setAdminLoading(true);
+                      try {
+                        await adminService.unlockAllPieces(user.uid);
+                        await refreshProfile();
+                        setSuccess("Unlocked all pieces!");
+                      } catch (error) {
+                        setError("Failed to unlock pieces");
+                      } finally {
+                        setAdminLoading(false);
+                      }
+                    }}
+                    disabled={adminLoading}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Package className="h-4 w-4 mr-1" />
+                    Unlock All Pieces
                   </Button>
                   <Button
                     size="sm"
