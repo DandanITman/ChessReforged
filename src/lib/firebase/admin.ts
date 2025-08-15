@@ -24,16 +24,17 @@ export class AdminService {
       // Get current user data
       const userDoc = await getDoc(userRef);
       const userData = userDoc.data();
-      const currentLevel = userData?.level || 1;
-      const currentExp = userData?.totalExperience || 0;
+      const currentLevel = userData?.profile?.level || userData?.level || 1;
+      const currentExp = userData?.stats?.totalExperience || 0;
 
       // Calculate experience needed to reach target level
       const targetLevel = currentLevel + levels;
       const expNeeded = LevelSystem.getExpToReachLevel(currentExp, targetLevel);
 
       await updateDoc(userRef, {
-        level: targetLevel,
-        totalExperience: increment(expNeeded)
+        'profile.level': targetLevel,
+        level: targetLevel, // Legacy field
+        'stats.totalExperience': increment(expNeeded)
       });
     } catch (error) {
       console.error('Error leveling up user:', error);
@@ -45,7 +46,8 @@ export class AdminService {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        orbs: increment(amount)
+        'currency.orbs': increment(amount),
+        orbs: increment(amount) // Legacy field
       });
     } catch (error) {
       console.error('Error adding orbs:', error);
@@ -57,7 +59,8 @@ export class AdminService {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        credits: increment(amount)
+        'currency.coins': increment(amount),
+        credits: increment(amount) // Legacy field
       });
     } catch (error) {
       console.error('Error adding coins:', error);
@@ -84,15 +87,16 @@ export class AdminService {
       // Get current user data to calculate new level
       const userDoc = await getDoc(userRef);
       const userData = userDoc.data();
-      const currentExp = userData?.totalExperience || 0;
+      const currentExp = userData?.stats?.totalExperience || 0;
       const newTotalExp = currentExp + amount;
 
       // Calculate new level based on total experience
       const newLevel = LevelSystem.getLevelFromExp(newTotalExp);
 
       await updateDoc(userRef, {
-        totalExperience: increment(amount),
-        level: newLevel
+        'stats.totalExperience': increment(amount),
+        'profile.level': newLevel,
+        level: newLevel // Legacy field
       });
     } catch (error) {
       console.error('Error adding experience:', error);
@@ -104,13 +108,17 @@ export class AdminService {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        gamesPlayed: 0,
-        totalExperience: 0,
-        level: 1,
-        rating: 400
+        'stats.wins': 0,
+        'stats.losses': 0,
+        'stats.draws': 0,
+        'stats.gamesPlayed': 0,
+        'stats.totalExperience': 0,
+        'profile.level': 1,
+        level: 1, // Legacy field
+        'ratings.standardCasual': 400,
+        'ratings.standardRanked': 400,
+        'ratings.classicalCasual': 400,
+        'ratings.classicalRanked': 400
       });
     } catch (error) {
       console.error('Error resetting user stats:', error);

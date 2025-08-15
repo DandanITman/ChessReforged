@@ -196,7 +196,9 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               {(() => {
+                // Get totalExperience from stats (proper location)
                 const totalExp = userProfile.stats?.totalExperience || 0;
+                // Get level from profile (proper location) with fallback to legacy field
                 const level = userProfile.profile?.level || userProfile.level || 1;
                 const levelInfo = LevelSystem.getLevelInfo(totalExp);
                 const levelTitle = LevelSystem.getLevelTitle(levelInfo.currentLevel);
