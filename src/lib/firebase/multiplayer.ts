@@ -21,11 +21,11 @@ import type { Square, Color, PieceSymbol } from 'chess.js';
 import type { ExtendedPieceSymbol } from '@/lib/chess/placement';
 
 // Helper function to remove undefined values from objects before sending to Firebase
-function cleanForFirestore<T extends Record<string, any>>(obj: T): T {
-  const cleaned = {} as T;
+function cleanForFirestore<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const cleaned: Partial<T> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
-      cleaned[key as keyof T] = value;
+      (cleaned as Record<string, unknown>)[key] = value;
     }
   }
   return cleaned;
