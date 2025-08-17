@@ -37,7 +37,6 @@ export default function EditorPage() {
   const color = useEditorStore((s) => s.color);
   const selectedType = useEditorStore((s) => s.selectedType);
   const validation = useEditorStore((s) => s.validation);
-  const currentDeck = useEditorStore((s) => s.currentDeck);
   const setColor = useEditorStore((s) => s.setColor);
   const setSelectedType = useEditorStore((s) => s.setSelectedType);
 

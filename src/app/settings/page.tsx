@@ -8,18 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
   Lock,
-  MapPin,
-  Image,
-  FileText,
   Bell,
-  Volume2,
-  Eye,
   Globe,
   Shield,
   Palette,
-  Monitor,
-  Moon,
-  Sun,
   Settings as SettingsIcon,
   Save,
   Camera,
@@ -38,6 +30,7 @@ import { updateProfile, updatePassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { LevelSystem } from "@/lib/utils/levelSystem";
 import { AdminService } from "@/lib/firebase/admin";
+import { useProfileStore } from "@/lib/store/profile";
 
 export default function SettingsPage() {
   const { user, userProfile, refreshProfile } = useAuth();
@@ -200,7 +193,6 @@ export default function SettingsPage() {
                 // Get totalExperience from stats (proper location)
                 const totalExp = userProfile.stats?.totalExperience || 0;
                 // Get level from profile (proper location) with fallback to legacy field
-                const level = userProfile.profile?.level || userProfile.level || 1;
                 const levelInfo = LevelSystem.getLevelInfo(totalExp);
                 const levelTitle = LevelSystem.getLevelTitle(levelInfo.currentLevel);
                 const levelColor = LevelSystem.getLevelColor(levelInfo.currentLevel);
@@ -653,8 +645,11 @@ export default function SettingsPage() {
                         try {
                           await adminService.levelUpUser(user.uid, 1);
                           await refreshProfile();
+                          // Sync profile store to refresh local data
+                          const profileStore = useProfileStore.getState();
+                          await profileStore.syncWithFirebase(user.uid);
                           setSuccess("Leveled up user!");
-                        } catch (error) {
+                        } catch {
                           setError("Failed to level up user");
                         } finally {
                           setAdminLoading(false);
@@ -675,8 +670,11 @@ export default function SettingsPage() {
                         try {
                           await adminService.addExperience(user.uid, 1000);
                           await refreshProfile();
+                          // Sync profile store to refresh local data
+                          const profileStore = useProfileStore.getState();
+                          await profileStore.syncWithFirebase(user.uid);
                           setSuccess("Added 1000 experience!");
-                        } catch (error) {
+                        } catch {
                           setError("Failed to add experience");
                         } finally {
                           setAdminLoading(false);
@@ -706,8 +704,11 @@ export default function SettingsPage() {
                         try {
                           await adminService.addCredits(user.uid, 1000);
                           await refreshProfile();
+                          // Sync profile store to refresh local data
+                          const profileStore = useProfileStore.getState();
+                          await profileStore.syncWithFirebase(user.uid);
                           setSuccess("Added 1000 credits!");
-                        } catch (error) {
+                        } catch {
                           setError("Failed to add credits");
                         } finally {
                           setAdminLoading(false);
@@ -728,8 +729,11 @@ export default function SettingsPage() {
                         try {
                           await adminService.addOrbs(user.uid, 100);
                           await refreshProfile();
+                          // Sync profile store to refresh local data
+                          const profileStore = useProfileStore.getState();
+                          await profileStore.syncWithFirebase(user.uid);
                           setSuccess("Added 100 orbs!");
-                        } catch (error) {
+                        } catch {
                           setError("Failed to add orbs");
                         } finally {
                           setAdminLoading(false);
@@ -761,8 +765,11 @@ export default function SettingsPage() {
                       try {
                         await adminService.unlockAllCosmetics(user.uid);
                         await refreshProfile();
+                        // Sync profile store to refresh local data
+                        const profileStore = useProfileStore.getState();
+                        await profileStore.syncWithFirebase(user.uid);
                         setSuccess("Unlocked all cosmetics!");
-                      } catch (error) {
+                      } catch {
                         setError("Failed to unlock cosmetics");
                       } finally {
                         setAdminLoading(false);
@@ -783,8 +790,11 @@ export default function SettingsPage() {
                       try {
                         await adminService.unlockAllPieces(user.uid);
                         await refreshProfile();
+                        // Also sync the profile store to refresh local inventory
+                        const profileStore = useProfileStore.getState();
+                        await profileStore.syncWithFirebase(user.uid);
                         setSuccess("Unlocked all pieces!");
-                      } catch (error) {
+                      } catch {
                         setError("Failed to unlock pieces");
                       } finally {
                         setAdminLoading(false);
@@ -805,8 +815,11 @@ export default function SettingsPage() {
                       try {
                         await adminService.resetUserStats(user.uid);
                         await refreshProfile();
+                        // Sync profile store to refresh local data
+                        const profileStore = useProfileStore.getState();
+                        await profileStore.syncWithFirebase(user.uid);
                         setSuccess("Reset user stats!");
-                      } catch (error) {
+                      } catch {
                         setError("Failed to reset stats");
                       } finally {
                         setAdminLoading(false);

@@ -1,4 +1,3 @@
-import type { PieceSymbol } from "chess.js";
 import type { ExtendedPieceSymbol } from "./placement";
 
 export interface PieceInfo {
@@ -62,82 +61,82 @@ export const PIECE_INFO: Record<ExtendedPieceSymbol, PieceInfo> = {
   // Custom pieces
   l: {
     symbol: "l",
-    name: "The Roaring Lion",
+    name: "Lion",
     points: 6,
-    movement: "Can move 2 squares in any direction, but can't jump over pieces",
-    description: "Pride of the battlefield, this ferocious feline guards its pride with golden courage.",
+    movement: "Can move exactly 2 squares in any direction (cannot jump over pieces)",
+    description: "A powerful predator with precise, calculated strikes.",
     rarity: "Epic"
   },
   s: {
     symbol: "s",
-    name: "The Footman",
+    name: "Soldier",
     points: 2,
-    movement: "Moves 1 square forward, captures diagonally like a pawn, but can also step sideways",
-    description: "Not the flashiest piece, but the backbone of your army.",
+    movement: "Moves 1 square forward or sideways (no capture), captures diagonally forward like a pawn",
+    description: "A versatile infantry unit that can advance or maneuver sideways.",
     rarity: "Common"
   },
   d: {
     symbol: "d",
-    name: "The Skyflame Dragon",
+    name: "Dragon",
     points: 8,
-    movement: "Moves like a queen, but only up to 4 squares at a time",
-    description: "Flies above the fray, breathing fire on the unprepared.",
+    movement: "Moves like a queen but limited to 4 squares maximum in any direction",
+    description: "The most feared creature of legend with devastating but controlled range.",
     rarity: "Legendary"
   },
   c: {
     symbol: "c",
-    name: "The Stonehurler",
+    name: "Catapult",
     points: 5,
-    movement: "Cannot move normally; instead, once per turn, it can attack a square up to 3 spaces away",
-    description: "Lobs heavy boulders, flattening friend or foe alike.",
+    movement: "Cannot move - stationary siege weapon (ranged attacks not yet implemented)",
+    description: "A fixed siege engine designed for long-range bombardment.",
     rarity: "Rare"
   },
   e: {
     symbol: "e",
-    name: "The War Elephant",
+    name: "Elephant",
     points: 4,
-    movement: "Moves exactly 2 squares diagonally, can jump over pieces",
-    description: "Gentle giant… until you're in the way.",
+    movement: "Moves exactly 2 squares diagonally (can jump over pieces)",
+    description: "A massive war beast with powerful diagonal charges.",
     rarity: "Uncommon"
   },
   w: {
     symbol: "w",
-    name: "The Arcane Sage",
+    name: "Wizard",
     points: 7,
-    movement: "Moves like a king but can teleport to any empty square once every 5 turns",
-    description: "One blink, and he's gone… or right behind you.",
+    movement: "Moves like a king (1 square in any direction) - teleportation not yet implemented",
+    description: "A wise spellcaster with careful, measured movements.",
     rarity: "Epic"
   },
   a: {
     symbol: "a",
-    name: "The Bowguard",
+    name: "Archer",
     points: 3,
-    movement: "Moves like a pawn but can shoot diagonally up to 2 squares away without moving",
-    description: "Silent, precise, and always watching.",
+    movement: "Moves like a pawn (forward 1, captures diagonally) - ranged attacks not yet implemented",
+    description: "A skilled marksman operating with pawn-like mobility.",
     rarity: "Uncommon"
   },
   h: {
     symbol: "h",
-    name: "The Galleon",
+    name: "Ship",
     points: 5,
-    movement: "Can only move along ranks or files, but sails until it hits a piece or the edge",
-    description: "The tides of war are in its favor.",
+    movement: "Moves like a rook (horizontally and vertically any distance)",
+    description: "A naval vessel that dominates straight lines across the battlefield.",
     rarity: "Rare"
   },
   m: {
     symbol: "m",
-    name: "The Commanding Steed",
+    name: "Knight Commander",
     points: 4,
-    movement: "Moves like a knight but can also step 1 square in any direction",
-    description: "The trusted leader of your cavalry.",
+    movement: "Moves like a knight (L-shaped moves) - additional king steps not yet implemented",
+    description: "An elite cavalry leader with the agility of a knight.",
     rarity: "Uncommon"
   },
   t: {
     symbol: "t",
-    name: "The Stone Sentinel",
+    name: "Golem",
     points: 7,
-    movement: "Moves 1 or 2 squares in any direction but cannot be captured by pawns",
-    description: "An immovable guardian carved from the earth itself.",
+    movement: "Moves 1 or 2 squares in any direction and cannot be captured by pawns",
+    description: "An ancient stone guardian immune to pawn attacks but vulnerable to stronger pieces.",
     rarity: "Epic"
   }
 };

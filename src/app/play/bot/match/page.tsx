@@ -21,7 +21,6 @@ function BotMatchContent() {
 
   const reset = useBotGameStore((s) => s.reset);
   const setDifficulty = useBotGameStore((s) => s.setDifficulty);
-  const fen = useBotGameStore((s) => s.fen);
   const status = useBotGameStore((s) => s.getGameStatus());
   const resign = useBotGameStore((s) => s.resign);
 
@@ -79,7 +78,7 @@ function BotMatchContent() {
     if (d === 'easy' || d === 'normal' || d === 'hard') {
       setDifficulty(d);
     }
-  }, [as, d, deckParam, decks, reset, setDifficulty]);
+  }, [as, d, deckParam, opponentDeckParam, decks, reset, setDifficulty]);
 
   const boardArea = useMemo(() => {
     if (previewFen) {

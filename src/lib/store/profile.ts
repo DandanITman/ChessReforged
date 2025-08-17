@@ -250,12 +250,36 @@ export const useProfileStore = create<ProfileState>()(persist<ProfileState>((set
     try {
       const firebaseProfile = await ProfileSync.loadProfile(uid);
       if (firebaseProfile) {
+        // Handle exp/level conversion properly
+        let exp = get().exp; // Default to current exp
+        if (firebaseProfile.stats?.totalExperience !== undefined) {
+          exp = firebaseProfile.stats.totalExperience;
+        } else if (firebaseProfile.level) {
+          exp = (firebaseProfile.level - 1) * 100; // Convert level to exp
+        }
+
+        // Handle currency fields with fallbacks (handle both coins/credits naming)
+        const credits = firebaseProfile.currency?.coins ??
+          ('credits' in firebaseProfile ? (firebaseProfile as unknown as {credits: number}).credits : get().credits);
+        const orbs = firebaseProfile.currency?.orbs ??
+          ('orbs' in firebaseProfile ? (firebaseProfile as unknown as {orbs: number}).orbs : get().orbs);
+
+        // Merge Firebase inventory with initial inventory to ensure all pieces exist
+        const mergedInventory = { ...initialInventory };
+        if (firebaseProfile.inventory) {
+          for (const [piece, count] of Object.entries(firebaseProfile.inventory)) {
+            if (typeof count === 'number') {
+              mergedInventory[piece as keyof Inventory] = count;
+            }
+          }
+        }
+
         // Merge Firebase data with local state
         set({
-          credits: firebaseProfile.credits,
-          exp: firebaseProfile.level * 100 - 100, // Convert level back to exp
-          orbs: firebaseProfile.orbs,
-          inventory: { ...initialInventory, ...firebaseProfile.inventory } as Inventory,
+          credits,
+          exp,
+          orbs,
+          inventory: mergedInventory,
           // Keep local achievements and cosmetics for now
           lastSyncedAt: Date.now(),
           isLoading: false

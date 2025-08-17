@@ -60,8 +60,21 @@ export class ProfileSync {
       
       if (docSnap.exists()) {
         const data = docSnap.data();
+        
+        // Handle inventory data - ensure it's properly structured
+        const inventory = { ...(data.inventory || {}) };
+        
+        // If inventory is missing or incomplete, ensure we have all piece types
+        const requiredPieces = ['p', 'n', 'b', 'r', 'q', 'k', 'l', 's', 'd', 'c', 'e', 'w', 'a', 'h', 'm', 't'];
+        for (const piece of requiredPieces) {
+          if (typeof inventory[piece] !== 'number') {
+            inventory[piece] = 0;
+          }
+        }
+        
         return {
           ...data,
+          inventory,
           createdAt: timestampToDate(data.createdAt),
           lastActive: timestampToDate(data.lastActive),
           stats: {

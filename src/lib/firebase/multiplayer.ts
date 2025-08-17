@@ -1,18 +1,12 @@
 import {
   doc,
-  collection,
   setDoc,
   getDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit,
   serverTimestamp,
   arrayUnion,
-  arrayRemove,
   Timestamp,
   FieldValue
 } from 'firebase/firestore';
@@ -429,7 +423,7 @@ export class MatchmakingManager {
   async findMatches(
     gameType: GameType,
     rating: number,
-    ratingRange: number = 200
+    ratingRange = 200
   ): Promise<MatchmakingEntry[]> {
     // For now, return empty array - would implement proper matchmaking logic
     // when we have actual matchmaking requirements

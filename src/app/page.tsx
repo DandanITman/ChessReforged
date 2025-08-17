@@ -3,7 +3,7 @@
 import React from "react";
 import { Sword, Bot, Users, Puzzle, ShoppingBag, Package, Eye, Crown, Zap, Star, Clock, Play } from "lucide-react";
 import { NavTile } from "@/components/NavTile";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRequireAuth } from "@/contexts/AuthContext";

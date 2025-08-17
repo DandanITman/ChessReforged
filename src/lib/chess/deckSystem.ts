@@ -1,4 +1,4 @@
-import type { Color, PieceSymbol, Square } from "chess.js";
+import type { Color, Square } from "chess.js";
 import { DEFAULT_BUDGET, type EditorPiece, type ExtendedPieceSymbol } from "./placement";
 
 export interface ArmyDeck {

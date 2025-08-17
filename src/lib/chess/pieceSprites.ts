@@ -1,4 +1,4 @@
-import type { Color, PieceSymbol } from "chess.js";
+import type { Color } from "chess.js";
 import type { ExtendedPieceSymbol } from "./placement";
 
 /**

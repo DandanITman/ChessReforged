@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bot, Crown, Zap, Target, Swords, Star } from "lucide-react";
 import { useEditorStore } from "@/lib/store/editor";
-import type { Color } from "chess.js";
 
 export default function PlayBotPage() {
   const [side, setSide] = React.useState<'w' | 'b'>('w');

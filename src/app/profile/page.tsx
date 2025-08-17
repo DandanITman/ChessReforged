@@ -6,17 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
-  MapPin,
   Calendar,
   Trophy,
   Target,
   Clock,
   TrendingUp,
   Edit,
-  Crown,
-  Zap,
   Star,
-  Medal
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,8 +38,6 @@ export default function ProfilePage() {
   const achievedCount = achievements.filter(a => a.achieved).length;
   const totalGames = userProfile?.stats.gamesPlayed || 0;
   const wins = userProfile?.stats.wins || 0;
-  const losses = userProfile?.stats.losses || 0;
-  const draws = userProfile?.stats.draws || 0;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const currentRating = userProfile?.ratings.standardCasual || 400;
   const ratingInfo = getRatingClass(currentRating);
