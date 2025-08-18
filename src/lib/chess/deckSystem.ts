@@ -1,5 +1,5 @@
 import type { Color, Square } from "chess.js";
-import { DEFAULT_BUDGET, type EditorPiece, type ExtendedPieceSymbol } from "./placement";
+import { DEFAULT_BUDGET, type EditorPiece, type ExtendedPieceSymbol, PIECE_COSTS } from "./placement";
 
 export interface ArmyDeck {
   id: string;
@@ -171,21 +171,10 @@ export function isDeckValidForBudget(deck: ArmyDeck, budget: number): boolean {
       hasKing = true;
     }
     
-    totalCost += getPieceCost(piece.type);
+    totalCost += PIECE_COSTS[piece.type] || 0;
   }
   
   return totalCost <= budget && hasKing;
-}
-
-// Get piece cost (same as PIECE_COSTS but centralized)
-function getPieceCost(type: ExtendedPieceSymbol): number {
-  const costs: Record<ExtendedPieceSymbol, number> = {
-    // Standard pieces
-    p: 1, n: 3, b: 3, r: 5, q: 8, k: 0,
-    // Custom pieces
-    l: 6, s: 2, d: 8, c: 5, e: 4, w: 7, a: 3, h: 5, m: 4, t: 7
-  };
-  return costs[type] || 0;
 }
 
 // Map custom pieces to standard pieces for chess.js compatibility

@@ -2,9 +2,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Color, PieceSymbol, Square } from "chess.js";
+import type { Color, Square } from "chess.js";
 import {
-  DEFAULT_BUDGET,
   type EditorPiece,
   type ExtendedPieceSymbol,
   validatePlacement,
@@ -16,7 +15,6 @@ import {
   createEmptyDeck,
   createDefaultDecks,
   generateDeckId,
-  isDeckValidForBudget,
 } from "@/lib/chess/deckSystem";
 import { useProfileStore } from "@/lib/store/profile";
 import { DeckSync, DebouncedSave } from "@/lib/firebase/dataSync";
@@ -73,15 +71,7 @@ const deckDebouncedSave = new DebouncedSave();
 export const useEditorStore = create<EditorState>()(
   persist(
     (set, get) => {
-      // Debug: Log what's being loaded from persistence
-      console.log('=== EDITOR STORE INITIALIZATION ===');
-      
       // Helper functions
-      function getCurrentDeck(): ArmyDeck | null {
-        const { decks, currentDeckId } = get();
-        return decks.find(d => d.id === currentDeckId) || null;
-      }
-
       function updateCurrentDeck(updates: Partial<ArmyDeck>) {
         const { decks, currentDeckId } = get();
         if (!currentDeckId) return;
@@ -105,16 +95,6 @@ export const useEditorStore = create<EditorState>()(
         return validatePlacement({ placed, color, budget });
       }
 
-      function computeDerivedState() {
-        const state = get();
-        const currentDeck = getCurrentDeck();
-        const budget = calculateBudgetForLevel(1); // Will be updated by initializeForLevel
-        const placed = currentDeck?.placed || {};
-        const validation = validatePlacement({ placed, color: state.color, budget });
-
-        return { currentDeck, budget, placed, validation };
-      }
-
       // Initial state
       const initialColor: Color = "w";
       const initialDecks = [
@@ -123,8 +103,6 @@ export const useEditorStore = create<EditorState>()(
       ];
       const whiteDecks = initialDecks.filter(d => d.color === 'w');
       const initialCurrentDeckId = whiteDecks[0]?.id || null;
-      
-      console.log('Initial decks created:', initialDecks.map(d => ({ id: d.id, name: d.name, color: d.color })));
 
       return {
         // Current editing state
@@ -222,12 +200,8 @@ export const useEditorStore = create<EditorState>()(
           const { decks } = get();
           const colorDecks = decks.filter(d => d.color === c);
 
-          console.log(`=== SWITCHING TO COLOR ${c} ===`);
-          console.log('Available decks for color:', colorDecks.map(d => ({ id: d.id, name: d.name })));
-
           if (colorDecks.length === 0) {
             // Create default decks for this color
-            console.log(`No decks found for color ${c}, creating defaults`);
             const newDecks = createDefaultDecks(c);
             const newCurrentDeck = newDecks[0] || null;
             set({
@@ -241,7 +215,6 @@ export const useEditorStore = create<EditorState>()(
             // Switch to first deck of this color (prefer main deck if available)
             const mainDeck = colorDecks.find(d => d.isMain);
             const newCurrentDeck = mainDeck || colorDecks[0];
-            console.log('Switching to deck:', { id: newCurrentDeck.id, name: newCurrentDeck.name, isMain: newCurrentDeck.isMain });
             set({
               color: c,
               currentDeckId: newCurrentDeck.id,
@@ -264,11 +237,6 @@ export const useEditorStore = create<EditorState>()(
           }
 
           const updatedDecks = [...decks, newDeck];
-          console.log('=== CREATING NEW DECK ===');
-          console.log('New deck:', { id: newDeck.id, name: newDeck.name, color: newDeck.color });
-          console.log('Updated decks count:', updatedDecks.length);
-          console.log('All decks:', updatedDecks.map(d => ({ id: d.id, name: d.name, color: d.color })));
-          
           set({
             decks: updatedDecks,
             currentDeckId: newDeck.id,
@@ -345,10 +313,6 @@ export const useEditorStore = create<EditorState>()(
         switchToDeck(deckId) {
           const { decks } = get();
           const targetDeck = decks.find(d => d.id === deckId);
-          console.log('=== SWITCHING TO DECK ===');
-          console.log('Target deck ID:', deckId);
-          console.log('Found deck:', targetDeck ? { id: targetDeck.id, name: targetDeck.name, color: targetDeck.color } : 'NOT FOUND');
-          console.log('Available decks:', decks.map(d => ({ id: d.id, name: d.name, color: d.color })));
           
           if (targetDeck) {
             set({
@@ -464,7 +428,7 @@ export const useEditorStore = create<EditorState>()(
           try {
             const profileStore = useProfileStore.getState();
             profileStore.trackArmyCreation();
-          } catch (error) {
+          } catch {
             // Ignore if profile store not available
           }
           
@@ -485,12 +449,8 @@ export const useEditorStore = create<EditorState>()(
         },
 
         saveDeck() {
-          const { currentDeck, decks } = get();
+          const { currentDeck } = get();
           if (!currentDeck) return;
-
-          console.log('=== SAVING DECK ===');
-          console.log('Saving deck:', { id: currentDeck.id, name: currentDeck.name, pieces: Object.keys(currentDeck.placed).length });
-          console.log('Total decks in store:', decks.length);
 
           // Update the last modified timestamp to indicate save
           updateCurrentDeck({ lastModified: Date.now() });

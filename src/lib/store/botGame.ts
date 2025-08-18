@@ -84,6 +84,29 @@ function chebyshev(dx: number, dy: number) {
   return Math.max(Math.abs(dx), Math.abs(dy));
 }
 
+/** Handle castling rook mapping moves */
+function updateCastlingMapping(next: CustomPieceMapping, move: Move, flags: string) {
+  if (move.piece === 'k' && flags) {
+    const rankChar = move.color === 'w' ? '1' : '8';
+    if (flags.includes('k')) {
+      const rookFrom = ('h' + rankChar) as Square;
+      const rookTo = ('f' + rankChar) as Square;
+      if (next[rookFrom]) {
+        next[rookTo] = next[rookFrom];
+        delete next[rookFrom];
+      }
+    }
+    if (flags.includes('q')) {
+      const rookFrom = ('a' + rankChar) as Square;
+      const rookTo = ('d' + rankChar) as Square;
+      if (next[rookFrom]) {
+        next[rookTo] = next[rookFrom];
+        delete next[rookFrom];
+      }
+    }
+  }
+}
+
 /**
  * Check if a verbose chess.js Move is allowed under our custom piece rules.
  * We restrict movement by filtering chess.js generated moves based on the
@@ -100,7 +123,6 @@ function isAllowedByCustom(move: Move, mapping: CustomPieceMapping): boolean {
 
   const { dx, dy } = deltas(move.from as Square, move.to as Square);
   const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
   const ch = chebyshev(dx, dy);
   const isCap = move.flags.includes('c');
 
@@ -316,25 +338,7 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
           }
 
           // Handle castling rook mapping move
-          if (move.piece === 'k' && flags) {
-            const rankChar = move.color === 'w' ? '1' : '8';
-            if (flags.includes('k')) {
-              const rookFrom = ('h' + rankChar) as Square;
-              const rookTo = ('f' + rankChar) as Square;
-              if (next[rookFrom]) {
-                next[rookTo] = next[rookFrom];
-                delete next[rookFrom];
-              }
-            }
-            if (flags.includes('q')) {
-              const rookFrom = ('a' + rankChar) as Square;
-              const rookTo = ('d' + rankChar) as Square;
-              if (next[rookFrom]) {
-                next[rookTo] = next[rookFrom];
-                delete next[rookFrom];
-              }
-            }
-          }
+          updateCastlingMapping(next, move, flags);
 
           // Move mapping entry for the moving piece (promotion overrides actual type)
           delete next[fromSq];
@@ -470,25 +474,7 @@ export const useBotGameStore = create<BotGameState>((set, get) => {
             }
 
             // Handle castling rook mapping move
-            if (move.piece === 'k' && flags) {
-              const rankChar = move.color === 'w' ? '1' : '8';
-              if (flags.includes('k')) {
-                const rookFrom = ('h' + rankChar) as Square;
-                const rookTo = ('f' + rankChar) as Square;
-                if (next[rookFrom]) {
-                  next[rookTo] = next[rookFrom];
-                  delete next[rookFrom];
-                }
-              }
-              if (flags.includes('q')) {
-                const rookFrom = ('a' + rankChar) as Square;
-                const rookTo = ('d' + rankChar) as Square;
-                if (next[rookFrom]) {
-                  next[rookTo] = next[rookFrom];
-                  delete next[rookFrom];
-                }
-              }
-            }
+            updateCastlingMapping(next, move, flags);
 
             // Move mapping entry for the moving piece (promotion overrides actual type)
             delete next[fromSq];

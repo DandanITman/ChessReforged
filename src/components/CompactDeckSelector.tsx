@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useEditorStore } from "@/lib/store/editor";
 import { useNotificationStore } from "@/lib/store/notifications";
 import { type ArmyDeck } from "@/lib/chess/deckSystem";
+import { PIECE_COSTS } from "@/lib/chess/placement";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   Plus,
@@ -54,8 +55,7 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
   const handleCreateDeck = () => {
     if (!newDeckName.trim()) return;
 
-    const newDeckId = createDeck(newDeckName.trim());
-    console.log("Created new deck:", newDeckId);
+    createDeck(newDeckName.trim());
     setNewDeckName("");
     setShowCreateForm(false);
 
@@ -68,7 +68,7 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
 
   const handleDuplicate = () => {
     if (!currentDeck) return;
-    const newDeckId = duplicateDeck(currentDeck.id, `${currentDeck.name} (Copy)`);
+    duplicateDeck(currentDeck.id, `${currentDeck.name} (Copy)`);
     addNotification({
       type: "success",
       message: `Deck "${currentDeck.name}" was cloned successfully!`,
@@ -113,13 +113,7 @@ export default function CompactDeckSelector({ playerLevel }: CompactDeckSelector
     const pieces = Object.values(deck.placed).filter(p => p?.color === color);
     const totalCost = pieces.reduce((sum, piece) => {
       if (!piece) return sum;
-      const costs = {
-        // Standard pieces
-        p: 1, n: 3, b: 3, r: 5, q: 8, k: 0,
-        // Custom pieces
-        l: 6, s: 2, d: 8, c: 5, e: 4, w: 7, a: 3, h: 5, m: 4, t: 7
-      };
-      return sum + (costs[piece.type as keyof typeof costs] || 0);
+      return sum + (PIECE_COSTS[piece.type] || 0);
     }, 0);
     
     return {
