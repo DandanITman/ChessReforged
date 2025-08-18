@@ -65,7 +65,7 @@ function DraggablePiece({
       <img
         src={pieceSprite(color, type)}
         alt={`${color === "w" ? "White" : "Black"} ${type}`}
-        className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)] levitate-on-hover"
+        className="w-full h-full pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)] levitate-on-hover"
       />
     </button>
   );
@@ -91,7 +91,7 @@ function DroppableSquare({
       ref={setNodeRef}
       onClick={onClick}
       className={cn(
-        "relative size-14",
+        "relative aspect-square w-full",
         isDark ? "bg-[#769656]" : "bg-[#EEEED2]",
         highlight === "move" && "outline outline-2 outline-sky-400/80 outline-offset-0",
         highlight === "from" && "outline outline-2 outline-emerald-400/80 outline-offset-0",
@@ -183,7 +183,7 @@ export default function EditorBoard() {
     <div className="inline-block select-none">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div
-          className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-lg shadow-lg overflow-hidden"
+          className="grid grid-cols-[1fr_repeat(8,1fr)] grid-rows-[repeat(8,1fr)_1fr] border rounded-lg shadow-lg overflow-hidden w-full max-w-[min(100vw-2rem,100vh-8rem)] aspect-square"
           onContextMenu={(e) => e.preventDefault()}
         >
           {Array.from({ length: 8 }).map((_, rankIndex) => {

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { DndContext, type DragEndEvent, type DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useBotGameStore } from "@/lib/store/botGame";
 import { pieceSprite } from "@/lib/chess/pieceSprites";
-import { type Square, type Color, type PieceSymbol } from "chess.js";
+import { type Square, type Color } from "chess.js";
 import { cn } from "@/lib/utils";
 import { SFX } from "@/lib/sound/sfx";
 import type { ExtendedPieceSymbol } from "@/lib/chess/placement";
@@ -102,7 +102,7 @@ function DraggablePiece({
         <img
           src={pieceSprite(color, type)}
           alt={`${color === "w" ? "White" : "Black"} ${type}`}
-          className={`h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)] levitate-on-hover${imgClass ? " " + imgClass : ""}`}
+          className={`w-full h-full pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)] levitate-on-hover${imgClass ? " " + imgClass : ""}`}
         />
       </PieceTooltip>
     </button>
@@ -129,7 +129,7 @@ function DroppableSquare({
       ref={setNodeRef}
       onClick={onClick}
       className={cn(
-        "relative size-14",
+        "relative aspect-square w-full",
         isDark ? "bg-[#769656]" : "bg-[#EEEED2]",
         highlight === "move" && "outline outline-2 outline-sky-400/80 outline-offset-0",
         highlight === "from" && "outline outline-2 outline-emerald-400/80 outline-offset-0",
@@ -360,7 +360,7 @@ export default function BotChessBoard({ showControls = true }: { showControls?: 
           onDragEnd={handleDragEnd}
         >
           <div
-            className="grid grid-cols-8 border-2 border-gray-800 dark:border-gray-200"
+            className="grid grid-cols-8 border-2 border-gray-800 dark:border-gray-200 w-full max-w-[min(100vw-2rem,100vh-8rem)] aspect-square"
             onContextMenu={(e) => {
               // Right-click anywhere on the board that is not on a piece clears the tooltip
               const el = e.target as HTMLElement;

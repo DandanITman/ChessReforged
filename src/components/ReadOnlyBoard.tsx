@@ -22,7 +22,7 @@ export default function ReadOnlyBoard({ fen }: { fen: string }) {
 
   return (
     <div className="inline-block">
-      <div className="grid grid-cols-[20px_repeat(8,56px)] grid-rows-[repeat(8,56px)_20px] border rounded-lg shadow-lg overflow-hidden">
+      <div className="grid grid-cols-[1fr_repeat(8,1fr)] grid-rows-[repeat(8,1fr)_1fr] border rounded-lg shadow-lg overflow-hidden w-full max-w-[min(100vw-2rem,100vh-8rem)] aspect-square">
         {Array.from({ length: 8 }).map((_, rankIndex) => {
           const rank = 8 - rankIndex;
           return (
@@ -38,7 +38,7 @@ export default function ReadOnlyBoard({ fen }: { fen: string }) {
                   <div
                     key={sq}
                     className={cn(
-                      "relative size-14",
+                      "relative aspect-square w-full",
                       isDark ? "bg-[#769656]" : "bg-[#EEEED2]"
                     )}
                   >
@@ -60,7 +60,7 @@ export default function ReadOnlyBoard({ fen }: { fen: string }) {
                         <img
                           src={pieceSprite(p.color as Color, p.type as PieceSymbol)}
                           alt={`${p.color === "w" ? "White" : "Black"} ${p.type}`}
-                          className="h-10 w-10 md:h-11 md:w-11 pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)]"
+                          className="w-full h-full pointer-events-none select-none drop-shadow-[0_1px_1px_rgba(0,0,0,.4)]"
                         />
                       </div>
                     ) : null}
